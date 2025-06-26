@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:driver_app/common/color.dart';
 import 'package:driver_app/common/textstyles.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../common/color.dart';
 
 class PharmacyOrderDetailPage extends StatelessWidget {
   final Map<String, dynamic> order;
@@ -16,10 +15,14 @@ class PharmacyOrderDetailPage extends StatelessWidget {
     final String createdAt = _formatDate(order['createdAt']);
     final String updatedAt = _formatDate(order['updatedAt']);
 
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title:  Text(
+        title: Text(
           'Order Details',
           style: AppTextStyles.heading2.copyWith(fontWeight: FontWeight.w600),
         ),
@@ -28,7 +31,7 @@ class PharmacyOrderDetailPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
+          preferredSize: Size.fromHeight(1),
           child: Container(
             height: 1,
             decoration: BoxDecoration(
@@ -44,364 +47,297 @@ class PharmacyOrderDetailPage extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: width * 0.04, vertical: height * 0.02),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section with Patient Info
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
- AppColors.white,
-                    AppColors.lightpacha.withOpacity(0.05),
+            /// Patient Information Section
+            _buildCard(
+              context,
+              children: [
+                // _iconBox(
+                //   icon: Icons.person,
+                //   label: 'Patient Name',
+                //   value: order['patientName'] ?? 'Unknown Patient',
+                // ),
 
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepOrange.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Patient Name
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightpacha,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Patient Name',
-                              style: AppTextStyles.bodyText.copyWith(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              order['patientName'] ?? 'Unknown Patient',
-                              style: AppTextStyles.bodyText.copyWith(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Phone Number
-                  _buildInfoRow(
-                    Icons.phone_rounded,
-                    'Phone Number',
-                    order['phoneNumber'] ?? 'Not provided',
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Created Date
-                  _buildInfoRow(
-                    Icons.schedule_rounded,
-                    'Order Created',
-                    createdAt,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Updated Date
-                  _buildInfoRow(
-                    Icons.update_rounded,
-                    'Last Updated',
-                    updatedAt,
-                  ),
-                ],
-              ),
-            ),
-
-            // Medicines Section
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightpacha.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.medication_rounded,
-                          color: AppColors.lightpacha,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Medicines Ordered',
-                        style: AppTextStyles.bodyText.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.lightpacha.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${medicines.length} items',
-                          style: AppTextStyles.bodyText.copyWith(
-                            fontSize: 12,
-                            color: AppColors.lightpacha,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (medicines.isNotEmpty)
-                    ...medicines.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Map<String, dynamic> med = entry.value;
-                      return Container(
-                        margin: EdgeInsets.only(bottom: index == medicines.length - 1 ? 0 : 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.lightpacha.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${index + 1}',
-                                  style: AppTextStyles.bodyText.copyWith(
-                                    color: AppColors.lightpacha,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    med['name'] ?? 'Unknown Medicine',
-                                    style: AppTextStyles.bodyText.copyWith(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Medicine',
-                                    style: AppTextStyles.bodyText.copyWith(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.green.shade200),
-                              ),
-                              child: Text(
-                                '₹${med['price'] ?? 0}',
-                                style: AppTextStyles.bodyText.copyWith(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green.shade600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList()
-                  else
+                Row(
+                  children: [
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: AppColors.lightpacha,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
                       ),
+                      child: const Icon(Icons.person, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.medication_outlined,
-                            size: 48,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 8),
                           Text(
-                            'No medicines listed',
-                            style: AppTextStyles.bodyText.copyWith(
-                              fontSize: 16,
+                            'Patient Name',
+                            style: TextStyle(
+                              fontSize: 12,
                               color: Colors.grey[600],
                               fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            order['patientName'] ?? 'Unknown Patient',
+                            style: AppTextStyles.bodyText.copyWith(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
                         ],
                       ),
                     ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Total Price Section
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                  AppColors.lightpacha,AppColors.lightpacha
                   ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepOrange.withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.payments_rounded,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Total Amount',
-                          style: AppTextStyles.bodyText.copyWith(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.9),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '₹${order['totalPrice'] ?? 0}',
-                          style: AppTextStyles.bodyText.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                SizedBox(height: height * 0.02),
+                _buildInfoRow(Icons.phone, 'Phone Number', order['phoneNumber'] ?? 'Not provided'),
+                SizedBox(height: height * 0.015),
+                _buildInfoRow(Icons.schedule, 'Order Created', createdAt),
+                SizedBox(height: height * 0.015),
+                _buildInfoRow(Icons.update, 'Last Updated', updatedAt),
+              ],
             ),
 
-            const SizedBox(height: 20),
+            SizedBox(height: height * 0.02),
+
+            /// Medicines List Section
+            _buildCard(
+              context,
+              children: [
+                Row(
+                  children: [
+                    _iconBox(Icons.medication_rounded, AppColors.lightpacha),
+                    SizedBox(width: width * 0.03),
+                    Expanded(
+                      child: Text(
+                        'Medicines Ordered',
+                        style: AppTextStyles.bodyText.copyWith(
+                          fontSize: width * 0.045,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.lightpacha.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${medicines.length} items',
+                        style: AppTextStyles.bodyText.copyWith(
+                          fontSize: width * 0.035,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.lightpacha,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: height * 0.015),
+                ..._buildMedicinesList(medicines, width),
+              ],
+            ),
+
+            SizedBox(height: height * 0.02),
+
+            /// Total Price Section
+            _buildCard(
+              context,
+              padding: EdgeInsets.all(width * 0.05),
+              background: AppColors.lightpacha,
+              children: [
+                Row(
+                  children: [
+                    _iconBox(Icons.payments_rounded, Colors.white.withOpacity(0.2)),
+                    SizedBox(width: width * 0.04),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Total Amount',
+                            style: AppTextStyles.bodyText.copyWith(
+                              fontSize: width * 0.035,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '₹${order['totalPrice'] ?? 0}',
+                            style: AppTextStyles.bodyText.copyWith(
+                              fontSize: width * 0.08,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+
+            SizedBox(height: height * 0.03),
           ],
         ),
       ),
     );
   }
 
+  List<Widget> _buildMedicinesList(List<dynamic> meds, double width) {
+    if (meds.isEmpty) {
+      return [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(width * 0.05),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.medication_outlined, size: width * 0.1, color: Colors.grey[400]),
+              SizedBox(height: 8),
+              Text('No medicines listed',
+                  style: AppTextStyles.bodyText.copyWith(
+                    fontSize: width * 0.04,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  )),
+            ],
+          ),
+        )
+      ];
+    }
+
+    return meds.asMap().entries.map((entry) {
+      int index = entry.key;
+      Map<String, dynamic> med = entry.value;
+
+      return Container(
+        margin: EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.all(width * 0.04),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            _indexCircle(index + 1, width),
+            SizedBox(width: width * 0.03),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    med['name'] ?? 'Unknown Medicine',
+                    style: AppTextStyles.bodyText.copyWith(
+                      fontSize: width * 0.045,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text('Medicine',
+                      style: AppTextStyles.smallBodyText.copyWith(
+                        fontSize: width * 0.035,
+                        color: Colors.grey[600],
+                      )),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Text(
+                '₹${med['price'] ?? 0}',
+                style: AppTextStyles.bodyText.copyWith(
+                  fontSize: width * 0.04,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade600,
+                ),
+              ),
+            )
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildCard(BuildContext context, {required List<Widget> children, EdgeInsets? padding, Color? background}) {
+    final width = MediaQuery.of(context).size.width;
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.only(bottom: width * 0.04),
+      padding: padding ?? EdgeInsets.all(width * 0.05),
+      decoration: BoxDecoration(
+        color: background ?? Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+    );
+  }
+
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.deepOrange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: Colors.deepOrange,
-            size: 18,
-          ),
-        ),
+        _iconBox(icon, Colors.deepOrange.withOpacity(0.1), iconColor: Colors.deepOrange),
         const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                )),
+            SizedBox(height: 2),
+            Text(
+              value,
+              style: AppTextStyles.bodyText.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ]),
+        )
+      ],
+    );
+  }
+
+  Widget _buildIconRow({required IconData icon, required String label, required String value}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.lightpacha,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.white, size: 24),
+        ),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,12 +350,12 @@ class PharmacyOrderDetailPage extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 value,
                 style: AppTextStyles.bodyText.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
               ),
@@ -430,27 +366,52 @@ class PharmacyOrderDetailPage extends StatelessWidget {
     );
   }
 
-  // Helper function to format timestamp
+  Widget _iconBox(IconData icon, Color background, {Color iconColor = Colors.white}) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(icon, color: iconColor, size: 20),
+    );
+  }
+
+  Widget _indexCircle(int index, double width) {
+    return Container(
+      width: width * 0.1,
+      height: width * 0.1,
+      decoration: BoxDecoration(
+        color: AppColors.lightpacha.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(
+        child: Text(
+          '$index',
+          style: AppTextStyles.bodyText.copyWith(
+            color: AppColors.lightpacha,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return 'N/A';
 
     try {
       DateTime dateTime;
-
       if (timestamp is Timestamp) {
         dateTime = timestamp.toDate();
       } else if (timestamp is DateTime) {
         dateTime = timestamp;
-      } else if (timestamp.toString().contains('at')) {
-        // Example: 21 June 2024 at 15:20:10
-        String clean = timestamp.toString().replaceAll(' UTC+5:30', '');
-        dateTime = DateFormat("d MMMM yyyy 'at' HH:mm:ss").parse(clean);
       } else {
-        dateTime = DateTime.parse(timestamp.toString());
+        dateTime = DateTime.tryParse(timestamp.toString()) ?? DateTime.now();
       }
 
       return DateFormat('MMM dd, yyyy HH:mm').format(dateTime);
-    } catch (e) {
+    } catch (_) {
       return 'Invalid date';
     }
   }

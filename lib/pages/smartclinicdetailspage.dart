@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../app.dart';
 import '../common/color.dart';
 
 class SmartClinicOrderDetailPage extends StatefulWidget {
@@ -739,36 +740,43 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
 
   Widget _buildSliverAppBar(BuildContext context) {
     final status = widget.order['status'] ?? 'pending';
-
     GeoPoint? geoPoint = widget.order['location'] as GeoPoint?;
     double latitude = geoPoint?.latitude ?? 0.0;
     double longitude = geoPoint?.longitude ?? 0.0;
-    return SliverAppBar(
 
-      expandedHeight: 268,
+
+
+    // Responsive sizing
+    double iconSize = width * 0.08;
+    double headingFontSize = width * 0.05;
+    double subTextFontSize = width * 0.032;
+    double boxPadding = width * 0.035;
+
+    return SliverAppBar(
+      expandedHeight: width * 0.33, // ~268px on 800px height
       floating: false,
       pinned: true,
       backgroundColor: AppColors.lightpacha,
       leading: Container(
-        margin: const EdgeInsets.all(8),
+        margin: EdgeInsets.all(width * 0.02),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: iconSize * 0.9),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       actions: [
         Container(
-          margin: const EdgeInsets.all(8),
+          margin: EdgeInsets.all(width * 0.02),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
-            icon: const Icon(Icons.share, color: Colors.white),
+            icon: Icon(Icons.share, color: Colors.white, size: iconSize),
             onPressed: () {
               // Share functionality
             },
@@ -777,7 +785,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -792,9 +800,9 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 60),
+                SizedBox(height: width * 0.08),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(boxPadding),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -803,22 +811,25 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                   child: Icon(
                     _getStatusIcon(status),
                     color: Colors.white,
-                    size: 32,
+                    size: iconSize,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: width * 0.015),
                 Text(
                   status.toUpperCase(),
                   style: AppTextStyles.heading2.copyWith(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: headingFontSize,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.5,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: width * 0.006),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: width * 0.03,
+                    vertical: width * 0.005,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -827,12 +838,17 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                     'ID: ${widget.order['uid'] ?? 'N/A'}',
                     style: AppTextStyles.smallBodyText.copyWith(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: subTextFontSize,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                ), const SizedBox(height: 8),
-                buildCompactContactWidget(latitude:latitude, longitude: longitude, phoneNumber:widget.order['phoneNumber'])
+                ),
+                SizedBox(height: width * 0.01),
+                buildCompactContactWidget(
+                  latitude: latitude,
+                  longitude: longitude,
+                  phoneNumber: widget.order['phoneNumber'],
+                ),
               ],
             ),
           ),

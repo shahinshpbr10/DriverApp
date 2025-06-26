@@ -2,9 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:driver_app/common/color.dart';
 import 'package:driver_app/common/textstyles.dart';
 import 'package:flutter/material.dart';
+import 'package:driver_app/app.dart';
 
 class CompletedOrdersTab extends StatelessWidget {
-  // Fetch completed orders from Firestore
   Future<List<Map<String, dynamic>>> _fetchCompletedOrders() async {
     final List<Map<String, dynamic>> allOrders = [];
 
@@ -15,12 +15,7 @@ class CompletedOrdersTab extends StatelessWidget {
 
     for (final collection in collections) {
       Query query = FirebaseFirestore.instance.collection(collection['name']!);
-
-      if (collection['type'] == 'smart-clinic') {
-        query = query.where('status', isEqualTo: 'completed');
-      } else if (collection['type'] == 'pharmacy') {
-        query = query.where('status', isEqualTo: 'completed');
-      }
+      query = query.where('status', isEqualTo: 'completed');
 
       final querySnapshot = await query.get();
 
@@ -36,7 +31,7 @@ class CompletedOrdersTab extends StatelessWidget {
       final aTime = a['timestamp'] as Timestamp?;
       final bTime = b['timestamp'] as Timestamp?;
       if (aTime != null && bTime != null) {
-        return bTime.compareTo(aTime); // Sort by timestamp
+        return bTime.compareTo(aTime);
       }
       return 0;
     });
@@ -44,7 +39,6 @@ class CompletedOrdersTab extends StatelessWidget {
     return allOrders;
   }
 
-  // Format the timestamp to show time ago or exact date
   String _formatTimestamp(dynamic timestamp) {
     if (timestamp == null) return '';
     DateTime dateTime = timestamp is Timestamp ? timestamp.toDate() : DateTime.tryParse(timestamp) ?? DateTime.now();
@@ -61,14 +55,14 @@ class CompletedOrdersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: FutureBuilder<List<Map<String, dynamic>>>( // Fetch completed orders using FutureBuilder
+      body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fetchCompletedOrders(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
-                strokeWidth: 3,
+                strokeWidth: width * 0.008,
               ),
             );
           }
@@ -78,9 +72,9 @@ class CompletedOrdersTab extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  SizedBox(height: 16),
-                  Text('Something went wrong', style: AppTextStyles.bodyText.copyWith(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[800])),
+                  Icon(Icons.error_outline, size: width * 0.16, color: Colors.red[300]),
+                  SizedBox(height: height * 0.02),
+                  Text('Something went wrong', style: AppTextStyles.bodyText.copyWith(fontSize: width * 0.045, fontWeight: FontWeight.w600, color: Colors.grey[800])),
                 ],
               ),
             );
@@ -93,17 +87,17 @@ class CompletedOrdersTab extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(24),
+                    padding: EdgeInsets.all(width * 0.06),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.hourglass_empty, size: 64, color: Colors.blue[300]),
+                    child: Icon(Icons.hourglass_empty, size: width * 0.16, color: Colors.blue[300]),
                   ),
-                  SizedBox(height: 24),
-                  Text('No completed orders', style: AppTextStyles.bodyText.copyWith(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey[800])),
-                  SizedBox(height: 8),
-                  Text('Completed orders will appear here.',style: AppTextStyles.smallBodyText.copyWith(color: Colors.grey[600], fontSize: 16)),
+                  SizedBox(height: height * 0.03),
+                  Text('No completed orders', style: AppTextStyles.bodyText.copyWith(fontSize: width * 0.05, fontWeight: FontWeight.w600, color: Colors.grey[800])),
+                  SizedBox(height: height * 0.01),
+                  Text('Completed orders will appear here.', style: AppTextStyles.smallBodyText.copyWith(color: Colors.grey[600], fontSize: width * 0.04)),
                 ],
               ),
             );
@@ -113,7 +107,7 @@ class CompletedOrdersTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
+                padding: EdgeInsets.fromLTRB(width * 0.05, height * 0.02, width * 0.05, height * 0.015),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   boxShadow: [
@@ -123,27 +117,27 @@ class CompletedOrdersTab extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(width * 0.02),
                       decoration: BoxDecoration(
                         color: Colors.blue[100],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.check_circle, color: Colors.blue[700], size: 20),
+                      child: Icon(Icons.check_circle, color: Colors.blue[700], size: width * 0.05),
                     ),
-                    SizedBox(width: 12),
+                    SizedBox(width: width * 0.03),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Completed', style: AppTextStyles.bodyText.copyWith(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.grey[800])),
-                        Text('${orders.length} orders completed', style: AppTextStyles.smallBodyText.copyWith(fontSize: 14, color: Colors.grey[600])),
+                        Text('Completed', style: AppTextStyles.bodyText.copyWith(fontSize: width * 0.045, fontWeight: FontWeight.w700, color: Colors.grey[800])),
+                        Text('${orders.length} orders completed', style: AppTextStyles.smallBodyText.copyWith(fontSize: width * 0.035, color: Colors.grey[600]))
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),
               Expanded(
                 child: ListView.builder(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 80),
+                  padding: EdgeInsets.fromLTRB(width * 0.04, width * 0.04, width * 0.04, width * 0.2),
                   itemCount: orders.length,
                   itemBuilder: (context, index) {
                     final order = orders[index];
@@ -152,7 +146,7 @@ class CompletedOrdersTab extends StatelessWidget {
                     return AnimatedContainer(
                       duration: Duration(milliseconds: 300 + (index * 50)),
                       curve: Curves.easeOutBack,
-                      margin: EdgeInsets.only(bottom: 12),
+                      margin: EdgeInsets.only(bottom: width * 0.03),
                       child: Material(
                         elevation: 2,
                         shadowColor: Colors.black.withOpacity(0.1),
@@ -163,7 +157,7 @@ class CompletedOrdersTab extends StatelessWidget {
                             _showOrderDetails(context, order);
                           },
                           child: Container(
-                            padding: EdgeInsets.all(16),
+                            padding: EdgeInsets.all(width * 0.04),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
@@ -178,7 +172,7 @@ class CompletedOrdersTab extends StatelessWidget {
                                 Row(
                                   children: [
                                     Container(
-                                      padding: EdgeInsets.all(10),
+                                      padding: EdgeInsets.all(width * 0.025),
                                       decoration: BoxDecoration(
                                         color: isPharmacy ? Colors.deepOrange.withOpacity(0.1) : Colors.green.withOpacity(0.1),
                                         borderRadius: BorderRadius.circular(12),
@@ -186,35 +180,35 @@ class CompletedOrdersTab extends StatelessWidget {
                                       child: Icon(
                                         isPharmacy ? Icons.local_pharmacy : Icons.medical_services,
                                         color: isPharmacy ? Colors.deepOrange : Colors.green,
-                                        size: 20,
+                                        size: width * 0.05,
                                       ),
                                     ),
-                                    SizedBox(width: 12),
+                                    SizedBox(width: width * 0.03),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             order['patientName'] ?? 'Unknown Patient',
-                                            style: AppTextStyles.bodyText.copyWith(fontSize: 16, color: Colors.black87),
+                                            style: AppTextStyles.bodyText.copyWith(fontSize: width * 0.042, color: Colors.black87),
                                           ),
                                           SizedBox(height: 2),
                                           Row(
                                             children: [
                                               Container(
-                                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                padding: EdgeInsets.symmetric(horizontal: width * 0.02, vertical: height * 0.003),
                                                 decoration: BoxDecoration(
                                                   color: Colors.blue.withOpacity(0.1),
                                                   borderRadius: BorderRadius.circular(12),
                                                 ),
                                                 child: Text(
                                                   'COMPLETED',
-                                                  style: AppTextStyles.smallBodyText.copyWith(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.blue[700]),
+                                                  style: AppTextStyles.smallBodyText.copyWith(fontSize: width * 0.028, fontWeight: FontWeight.w600, color: Colors.blue[700]),
                                                 ),
                                               ),
-                                              SizedBox(width: 8),
+                                              SizedBox(width: width * 0.02),
                                               Container(
-                                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                padding: EdgeInsets.symmetric(horizontal: width * 0.02, vertical: height * 0.003),
                                                 decoration: BoxDecoration(
                                                   color: isPharmacy
                                                       ? Colors.deepOrange.withOpacity(0.1)
@@ -223,7 +217,7 @@ class CompletedOrdersTab extends StatelessWidget {
                                                 ),
                                                 child: Text(
                                                   isPharmacy ? 'Pharmacy' : 'Smart Clinic',
-                                                  style: AppTextStyles.smallBodyText.copyWith(fontSize: 10, fontWeight: FontWeight.w500, color: isPharmacy ? Colors.deepOrange : Colors.green),
+                                                  style: AppTextStyles.smallBodyText.copyWith(fontSize: width * 0.028, fontWeight: FontWeight.w500, color: isPharmacy ? Colors.deepOrange : Colors.green),
                                                 ),
                                               ),
                                             ],
@@ -236,36 +230,32 @@ class CompletedOrdersTab extends StatelessWidget {
                                       children: [
                                         Text(
                                           '₹${isPharmacy ? (order['totalPrice'] ?? 0) : (order['servicePrice'] ?? 0)}',
-                                          style: AppTextStyles.smallBodyText.copyWith(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87),
+                                          style: AppTextStyles.smallBodyText.copyWith(fontSize: width * 0.045, fontWeight: FontWeight.w700, color: Colors.black87),
                                         ),
                                         if (order['timestamp'] != null)
                                           Text(
                                             _formatTimestamp(order['timestamp']),
-                                            style: AppTextStyles.smallBodyText.copyWith(fontSize: 12, color: Colors.grey[600]),
+                                            style: AppTextStyles.smallBodyText.copyWith(fontSize: width * 0.03, color: Colors.grey[600]),
                                           ),
                                       ],
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 12),
+                                SizedBox(height: height * 0.015),
                                 Container(
-                                  padding: EdgeInsets.all(12),
+                                  padding: EdgeInsets.all(width * 0.03),
                                   decoration: BoxDecoration(
                                     color: Colors.blue[50],
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
                                     children: [
-                                      SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: Icon(Icons.check_circle, size: 16, color: Colors.green[600]),
-                                      ),
-                                      SizedBox(width: 12),
+                                      Icon(Icons.check_circle, size: width * 0.04, color: Colors.green[600]),
+                                      SizedBox(width: width * 0.03),
                                       Expanded(
                                         child: Text(
                                           'Order Completed!',
-                                          style: AppTextStyles.smallBodyText.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.green[700]),
+                                          style: AppTextStyles.smallBodyText.copyWith(fontSize: width * 0.037, fontWeight: FontWeight.w500, color: Colors.green[700]),
                                         ),
                                       ),
                                     ],
@@ -304,9 +294,9 @@ class CompletedOrdersTab extends StatelessWidget {
           child: Column(
             children: [
               Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.symmetric(vertical: 12),
+                width: width * 0.1,
+                height: height * 0.006,
+                margin: EdgeInsets.symmetric(vertical: height * 0.015),
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
@@ -315,20 +305,20 @@ class CompletedOrdersTab extends StatelessWidget {
               Expanded(
                 child: ListView(
                   controller: scrollController,
-                  padding: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(width * 0.05),
                   children: [
                     Text(
                       'Order Details',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.grey[800]),
+                      style: TextStyle(fontSize: width * 0.06, fontWeight: FontWeight.w700, color: Colors.grey[800]),
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: height * 0.02),
                     ...order.entries.map((entry) => Padding(
-                      padding: EdgeInsets.only(bottom: 8),
+                      padding: EdgeInsets.only(bottom: height * 0.01),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                            width: 120,
+                            width: width * 0.3,
                             child: Text(
                               '${entry.key}:',
                               style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[700]),

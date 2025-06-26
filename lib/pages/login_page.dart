@@ -6,7 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import 'home_page.dart'; // Assuming you have a HomeScreen page
+import '../app.dart';
+import 'home_page.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -20,43 +21,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _obscurePassword = true;
-  String _errorMessage = ''; // To store error messages if login fails
+  String _errorMessage = '';
 
   void _login() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = ''; // Reset error message
+      _errorMessage = '';
     });
 
     try {
-      // Attempt login using Firebase Authentication
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
         password: _passwordController.text,
       );
 
-      // Fetch the user's approval status from Firestore
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('zappq_driver') // Ensure you're accessing the correct collection
+          .collection('zappq_driver')
           .doc(userCredential.user?.uid)
           .get();
 
-      // Ensure the document exists and is a Map
       if (userDoc.exists) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-        // Check if the user is approved
         if (userData['approved'] == true) {
-          setState(() {
-            _isLoading = false;
-          });
-
-          // Navigate to the home page after successful login
+          setState(() => _isLoading = false);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => CustomNavbar()),
           );
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Logged in successfully!'),
@@ -69,8 +61,6 @@ class _LoginScreenState extends State<LoginScreen> {
             _isLoading = false;
             _errorMessage = 'Your account is not approved yet.';
           });
-
-          // Log out the user if not approved
           await _auth.signOut();
         }
       } else {
@@ -87,11 +77,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final isTablet = width > 600;
+
     return Scaffold(
       body: Container(
+        height: height,
+        width: width,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -106,263 +99,240 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo/Icon Section
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.local_taxi,
-                      size: 60,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 40),
-
-                  // Welcome Text
-                  Text(
-                    'Welcome Back!',
-                    style: AppTextStyles.bodyText.copyWith(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Sign in to continue driving',
-                    style: AppTextStyles.smallBodyText.copyWith(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                  SizedBox(height: 40),
-
-                  // Login Form Card
-                  Container(
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        // Email Field
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[200]!),
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.06,
+                vertical: height * 0.02,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 500),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon
+                    Container(
+                      width: isTablet ? 150 : 100,
+                      height: isTablet ? 150 : 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
                           ),
-                          child: TextField(style: AppTextStyles.smallBodyText,
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.local_taxi,
+                        size: isTablet ? 80 : 50,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: height * 0.04),
+
+                    Text(
+                      'Welcome Back!',
+                      style: AppTextStyles.bodyText.copyWith(
+                        fontSize: isTablet ? 36 : 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Sign in to continue driving',
+                      style: AppTextStyles.smallBodyText.copyWith(
+                        fontSize: isTablet ? 18 : 14,
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                    SizedBox(height: height * 0.04),
+
+                    // Form Card
+                    Container(
+                      padding: EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // Email
+                          _buildTextField(
                             controller: _emailController,
-                            decoration: InputDecoration(
-                              labelText: 'Email Address',
-                              prefixIcon: Icon(
-                                Icons.email_outlined,
-                                color: AppColors.lightpacha,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                              labelStyle: AppTextStyles.smallBodyText.copyWith(color: Colors.grey[600]),
-                            ),
+                            label: 'Email Address',
+                            icon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                           ),
-                        ),
-                        SizedBox(height: 20),
+                          SizedBox(height: 20),
 
-                        // Password Field
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[200]!),
-                          ),
-                          child: TextField(style: AppTextStyles.smallBodyText,
+                          // Password
+                          _buildTextField(
                             controller: _passwordController,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: Icon(
-                                Icons.lock_outline,
-                                color: AppColors.lightpacha,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color: Colors.grey[600],
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                              labelStyle: AppTextStyles.smallBodyText.copyWith(color: Colors.grey[600]),
-                            ),
-                            obscureText: _obscurePassword,
+                            label: 'Password',
+                            icon: Icons.lock_outline,
+                            isPassword: true,
                           ),
-                        ),
-                        SizedBox(height: 20),
+                          SizedBox(height: 20),
 
-                        // Error Message
-                        if (_errorMessage.isNotEmpty)
-                          Container(
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red[50],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red[200]!),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red[600],
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _errorMessage,
-                                    style: AppTextStyles.smallBodyText.copyWith(
-                                      color: Colors.red[600],
-                                      fontSize: 14,
+                          if (_errorMessage.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.error_outline,
+                                      color: Colors.red[600], size: 20),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage,
+                                      style: AppTextStyles.smallBodyText.copyWith(
+                                        color: Colors.red[600],
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        SizedBox(height: 24),
+                          SizedBox(height: 24),
 
-                        // Login Button
-                        Container(
-                          width: double.infinity,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [               Color(0xff84CB17),
-                                Color(0xff6BA513),
-                                Color(0xff5A8F0F),],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.lightpacha.withOpacity(0.3),
-                                blurRadius: 12,
-                                offset: Offset(0, 6),
+                          // Login Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _login,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.lightpacha,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
+                              child: _isLoading
+                                  ? CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                    Colors.white),
+                              )
+                                  : Text(
+                                'Sign In',
+                                style: AppTextStyles.smallBodyText.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
                                 ),
                               ),
-                            )
-                                : Text(
-                              'Sign In',
-                              style: AppTextStyles.smallBodyText.copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 24),
+                    SizedBox(height: 24),
 
-                  // Register Link
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: AppTextStyles.smallBodyText.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 16,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AccountRegistrationPage(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Sign Up',
-                            style:AppTextStyles.smallBodyText.copyWith(
-                              color: Colors.white,
+                    // Register
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: AppTextStyles.smallBodyText.copyWith(
+                              color: Colors.white.withOpacity(0.8),
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
                             ),
                           ),
-                        ),
-                      ],
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AccountRegistrationPage(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Sign Up',
+                              style: AppTextStyles.smallBodyText.copyWith(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    bool isPassword = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword ? _obscurePassword : false,
+        keyboardType: keyboardType,
+        style: AppTextStyles.smallBodyText,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: AppColors.lightpacha),
+          suffixIcon: isPassword
+              ? IconButton(
+            icon: Icon(
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: Colors.grey[600],
+            ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
+          )
+              : null,
+          border: InputBorder.none,
+          contentPadding:
+          EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          labelStyle:
+          AppTextStyles.smallBodyText.copyWith(color: Colors.grey[600]),
         ),
       ),
     );

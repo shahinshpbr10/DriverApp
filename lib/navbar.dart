@@ -11,12 +11,10 @@ class CustomNavbar extends StatefulWidget {
 
 class _CustomNavbarState extends State<CustomNavbar>
     with TickerProviderStateMixin {
-  // Track the selected index of the bottom navigation bar
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // List of pages for navigation
   static List<Widget> _pages = <Widget>[
     HomeScreen(),
     HistoryPage(),
@@ -42,7 +40,6 @@ class _CustomNavbarState extends State<CustomNavbar>
     super.dispose();
   }
 
-  // Method to handle item taps on bottom navigation
   void _onItemTapped(int index) {
     if (_selectedIndex != index) {
       _animationController.reset();
@@ -51,6 +48,16 @@ class _CustomNavbarState extends State<CustomNavbar>
       });
       _animationController.forward();
     }
+  }
+
+  double responsiveFontSize(double baseSize) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return baseSize * (screenWidth / 375); // 375 is base design width
+  }
+
+  double responsiveIconSize(double baseSize) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    return baseSize * (screenWidth / 375);
   }
 
   @override
@@ -98,11 +105,11 @@ class _CustomNavbarState extends State<CustomNavbar>
             unselectedItemColor: Colors.grey[600],
             selectedLabelStyle: AppTextStyles.bodyText.copyWith(
               fontWeight: FontWeight.w700,
-              fontSize: 12,
+              fontSize: responsiveFontSize(12),
             ),
             unselectedLabelStyle: AppTextStyles.smallBodyText.copyWith(
               fontWeight: FontWeight.w500,
-              fontSize: 11,
+              fontSize: responsiveFontSize(11),
             ),
             items: [
               _buildNavItem(
@@ -137,11 +144,12 @@ class _CustomNavbarState extends State<CustomNavbar>
       int index,
       ) {
     bool isSelected = _selectedIndex == index;
+    double iconSize = responsiveIconSize(isSelected ? 26 : 24);
 
     return BottomNavigationBarItem(
       icon: AnimatedContainer(
         duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.all(8),
+        padding: EdgeInsets.all(responsiveIconSize(8)),
         decoration: BoxDecoration(
           color: isSelected
               ? Color(0xff84CB17).withOpacity(0.15)
@@ -150,15 +158,10 @@ class _CustomNavbarState extends State<CustomNavbar>
         ),
         child: Icon(
           isSelected ? selectedIcon : unselectedIcon,
-          size: isSelected ? 26 : 24,
+          size: iconSize,
         ),
       ),
       label: label,
-
     );
   }
 }
-
-
-
-

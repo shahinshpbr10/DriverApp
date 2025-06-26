@@ -60,6 +60,11 @@ class InProgressOrdersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final padding = size.width * 0.05;
+    final cardMargin = size.height * 0.015;
+    final iconSize = size.width * 0.05;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -74,8 +79,12 @@ class InProgressOrdersTab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(strokeWidth: 3),
-                    const SizedBox(height: 16),
-                    Text('Loading In-progress orders...', style: AppTextStyles.bodyText.copyWith(fontSize: 16, color: Colors.grey[600])),
+                    SizedBox(height: size.height * 0.02),
+                    Text('Loading In-progress orders...',
+                        style: AppTextStyles.bodyText.copyWith(
+                          fontSize: size.width * 0.045,
+                          color: Colors.grey[600],
+                        )),
                   ],
                 ),
               ),
@@ -87,10 +96,14 @@ class InProgressOrdersTab extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  SizedBox(height: 16),
-                  Text('Something went wrong', style: AppTextStyles.bodyText.copyWith(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[800])),
-
+                  Icon(Icons.error_outline, size: size.width * 0.15, color: Colors.red[300]),
+                  SizedBox(height: size.height * 0.02),
+                  Text('Something went wrong',
+                      style: AppTextStyles.bodyText.copyWith(
+                        fontSize: size.width * 0.05,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      )),
                 ],
               ),
             );
@@ -103,29 +116,37 @@ class InProgressOrdersTab extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: EdgeInsets.all(24),
+                    padding: EdgeInsets.all(size.width * 0.07),
                     decoration: BoxDecoration(
                       color: Colors.blue[50],
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.hourglass_empty, size: 64, color: Colors.blue[300]),
+                    child: Icon(Icons.hourglass_empty, size: size.width * 0.15, color: Colors.blue[300]),
                   ),
-                  SizedBox(height: 24),
-                  Text('No orders in progress', style: AppTextStyles.bodyText.copyWith(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey[800])),
-                  SizedBox(height: 8),
-                  Text('Active orders will appear here.',style: AppTextStyles.smallBodyText.copyWith(color: Colors.grey[600], fontSize: 16)),
+                  SizedBox(height: size.height * 0.03),
+                  Text('No orders in progress',
+                      style: AppTextStyles.bodyText.copyWith(
+                        fontSize: size.width * 0.05,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      )),
+                  SizedBox(height: size.height * 0.01),
+                  Text('Active orders will appear here.',
+                      style: AppTextStyles.smallBodyText.copyWith(
+                        fontSize: size.width * 0.04,
+                        color: Colors.grey[600],
+                      )),
                 ],
               ),
             );
           }
 
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                padding: EdgeInsets.symmetric(horizontal: padding),
                 child: Container(
-                  padding: EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  padding: EdgeInsets.all(size.width * 0.045),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(9),
                     color: Colors.white,
@@ -136,19 +157,28 @@ class InProgressOrdersTab extends StatelessWidget {
                   child: Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(8),
+                        padding: EdgeInsets.all(size.width * 0.025),
                         decoration: BoxDecoration(
                           color: Colors.blue[100],
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(Icons.access_time, color: Colors.blue[700], size: 20),
+                        child: Icon(Icons.access_time, color: Colors.blue[700], size: iconSize),
                       ),
-                      SizedBox(width: 12),
+                      SizedBox(width: size.width * 0.03),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('In Progress', style: AppTextStyles.bodyText.copyWith(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.grey[800])),
-                          Text('${orders.length} orders being processed', style: AppTextStyles.smallBodyText.copyWith(fontSize: 14, color: Colors.grey[600])),
+                          Text('In Progress',
+                              style: AppTextStyles.bodyText.copyWith(
+                                fontSize: size.width * 0.045,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.grey[800],
+                              )),
+                          Text('${orders.length} orders being processed',
+                              style: AppTextStyles.smallBodyText.copyWith(
+                                fontSize: size.width * 0.035,
+                                color: Colors.grey[600],
+                              )),
                         ],
                       ),
                     ],
@@ -157,29 +187,24 @@ class InProgressOrdersTab extends StatelessWidget {
               ),
               Expanded(
                 child: ListView.builder(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 80),
+                  padding: EdgeInsets.fromLTRB(padding, cardMargin, padding, size.height * 0.08),
                   itemCount: orders.length,
                   itemBuilder: (context, index) {
                     final order = orders[index];
                     final isPharmacy = order['source'] == 'pharmacy';
 
-                    return AnimatedContainer(
-                      duration: Duration(milliseconds: 300 + (index * 50)),
-                      curve: Curves.easeOutBack,
-                      margin: EdgeInsets.only(bottom: 12),
+                    return Container(
+                      margin: EdgeInsets.only(bottom: cardMargin),
                       child: Material(
                         elevation: 2,
                         shadowColor: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
-                          padding: EdgeInsets.all(16),
+                          padding: EdgeInsets.all(padding),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.blue.withOpacity(0.2),
-                              width: 1,
-                            ),
+                            border: Border.all(color: Colors.blue.withOpacity(0.2)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +212,7 @@ class InProgressOrdersTab extends StatelessWidget {
                               Row(
                                 children: [
                                   Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: EdgeInsets.all(size.width * 0.025),
                                     decoration: BoxDecoration(
                                       color: isPharmacy ? Colors.deepOrange.withOpacity(0.1) : Colors.green.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(12),
@@ -195,45 +220,28 @@ class InProgressOrdersTab extends StatelessWidget {
                                     child: Icon(
                                       isPharmacy ? Icons.local_pharmacy : Icons.medical_services,
                                       color: isPharmacy ? Colors.deepOrange : Colors.green,
-                                      size: 20,
+                                      size: iconSize,
                                     ),
                                   ),
-                                  SizedBox(width: 12),
+                                  SizedBox(width: size.width * 0.03),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          order['patientName'] ?? 'Unknown Patient',
-                                          style: AppTextStyles.bodyText.copyWith(fontSize: 16, color: Colors.black87),
-                                        ),
-                                        SizedBox(height: 2),
+                                        Text(order['patientName'] ?? 'Unknown Patient',
+                                            style: AppTextStyles.bodyText.copyWith(
+                                              fontSize: size.width * 0.045,
+                                              color: Colors.black87,
+                                            )),
+                                        SizedBox(height: size.height * 0.005),
                                         Row(
                                           children: [
-                                            Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              child: Text(
-                                                'IN PROGRESS',
-                                                style: AppTextStyles.smallBodyText.copyWith(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.blue[700]),
-                                              ),
-                                            ),
-                                            SizedBox(width: 8),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: isPharmacy
-                                                    ? Colors.deepOrange.withOpacity(0.1)
-                                                    : Colors.green.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              child: Text(
-                                                isPharmacy ? 'Pharmacy' : 'Smart Clinic',
-                                                style: AppTextStyles.smallBodyText.copyWith(fontSize: 10, fontWeight: FontWeight.w500, color: isPharmacy ? Colors.deepOrange : Colors.green),
-                                              ),
+                                            _buildTag('IN PROGRESS', Colors.blue[700]!, size),
+                                            SizedBox(width: size.width * 0.02),
+                                            _buildTag(
+                                              isPharmacy ? 'Pharmacy' : 'Smart Clinic',
+                                              isPharmacy ? Colors.deepOrange : Colors.green,
+                                              size,
                                             ),
                                           ],
                                         ),
@@ -245,73 +253,69 @@ class InProgressOrdersTab extends StatelessWidget {
                                     children: [
                                       Text(
                                         '₹${isPharmacy ? (order['totalPrice'] ?? 0) : (order['servicePrice'] ?? 0)}',
-                                        style: AppTextStyles.smallBodyText.copyWith(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black87),
+                                        style: AppTextStyles.bodyText.copyWith(
+                                          fontSize: size.width * 0.045,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.black87,
+                                        ),
                                       ),
                                       if (order['timestamp'] != null)
                                         Text(
                                           _formatTimestamp(order['timestamp']),
-                                          style: AppTextStyles.smallBodyText.copyWith(fontSize: 12, color: Colors.grey[600]),
+                                          style: AppTextStyles.smallBodyText.copyWith(
+                                            fontSize: size.width * 0.032,
+                                            color: Colors.grey[600],
+                                          ),
                                         ),
                                     ],
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 12),
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue[50],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                              SizedBox(height: size.height * 0.015),
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: size.width * 0.04,
+                                    height: size.width * 0.04,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                                    ),
+                                  ),
+                                  SizedBox(width: size.width * 0.03),
+                                  Expanded(
+                                    child: Text(
+                                      isPharmacy ? 'Preparing medicines...' : 'Processing appointment...',
+                                      style: AppTextStyles.bodyText.copyWith(
+                                        fontSize: size.width * 0.037,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.blue[700],
                                       ),
                                     ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        isPharmacy ? 'Preparing medicines...' : 'Processing appointment...',
-                                        style: AppTextStyles.smallBodyText.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.blue[700]),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(height: 12),
+                              SizedBox(height: size.height * 0.015),
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    final isPharmacy = order['source'] == 'pharmacy';
-                                    if (isPharmacy) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PharmacyOrderDetailPage(order: order),
-                                        ),
-                                      );
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SmartClinicOrderDetailPage(order: order),
-                                        ),
-                                      );
-                                    }
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                        isPharmacy ? PharmacyOrderDetailPage(order: order) : SmartClinicOrderDetailPage(order: order),
+                                      ),
+                                    );
                                   },
-                                  icon: Icon(Icons.check_circle, size: 18),
-                                  label: Text('Mark as Complete',style: AppTextStyles.bodyText.copyWith(fontWeight: FontWeight.w600),),
+                                  icon: Icon(Icons.check_circle, size: size.width * 0.045),
+                                  label: Text('Mark as Complete',
+                                      style: AppTextStyles.bodyText.copyWith(fontWeight: FontWeight.w600)),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.lightpacha,
                                     foregroundColor: Colors.white,
                                     elevation: 0,
-                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    padding: EdgeInsets.symmetric(vertical: size.height * 0.015),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -333,67 +337,19 @@ class InProgressOrdersTab extends StatelessWidget {
     );
   }
 
-  void _showOrderDetails(BuildContext context, Map<String, dynamic> order) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.5,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: EdgeInsets.all(20),
-                  children: [
-                    Text(
-                      'Order Details',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.grey[800]),
-                    ),
-                    SizedBox(height: 20),
-                    ...order.entries.map((entry) => Padding(
-                      padding: EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 120,
-                            child: Text(
-                              '${entry.key}:',
-                              style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              entry.value.toString(),
-                              style: TextStyle(color: Colors.grey[800]),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )).toList(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+  Widget _buildTag(String text, Color color, Size size) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.02, vertical: size.height * 0.004),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.smallBodyText.copyWith(
+          fontSize: size.width * 0.03,
+          fontWeight: FontWeight.w500,
+          color: color,
         ),
       ),
     );

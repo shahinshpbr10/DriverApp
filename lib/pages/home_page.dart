@@ -2,7 +2,7 @@ import 'package:driver_app/common/textstyles.dart';
 import 'package:driver_app/pages/in_progress_page.dart';
 import 'package:driver_app/pages/pending_page.dart';
 import 'package:flutter/material.dart';
-
+import '../app.dart';
 import 'complete_tab.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -10,8 +10,7 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -39,10 +38,13 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+
+    final isSmallScreen = width < 360;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(170),
+        preferredSize: Size.fromHeight(height * 0.23),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -65,13 +67,13 @@ class _HomeScreenState extends State<HomeScreen>
           child: SafeArea(
             child: Column(
               children: [
-                // App Header
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: width * 0.05, vertical: height * 0.015),
                   child: Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(8),
+                        padding: EdgeInsets.all(width * 0.025),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -79,10 +81,10 @@ class _HomeScreenState extends State<HomeScreen>
                         child: Icon(
                           Icons.local_shipping,
                           color: Colors.white,
-                          size: 28,
+                          size: width * 0.07,
                         ),
                       ),
-                      SizedBox(width: 15),
+                      SizedBox(width: width * 0.04),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,8 +94,7 @@ class _HomeScreenState extends State<HomeScreen>
                               style: AppTextStyles.heading2.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                                fontSize: 22,
+                                fontSize: isSmallScreen ? 18 : 22,
                               ),
                             ),
                             SizedBox(height: 2),
@@ -101,15 +102,14 @@ class _HomeScreenState extends State<HomeScreen>
                               'Manage your deliveries',
                               style: AppTextStyles.smallBodyText.copyWith(
                                 color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
+                                fontSize: isSmallScreen ? 12 : 14,
                               ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.all(10),
+                        padding: EdgeInsets.all(width * 0.03),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -117,15 +117,15 @@ class _HomeScreenState extends State<HomeScreen>
                         child: Icon(
                           Icons.notifications_outlined,
                           color: Colors.white,
-                          size: 28,
+                          size: width * 0.07,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Enhanced Tab Bar
+                // Tab Bar
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  margin: EdgeInsets.symmetric(horizontal: width * 0.025),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(16),
@@ -134,8 +134,9 @@ class _HomeScreenState extends State<HomeScreen>
                       width: 1,
                     ),
                   ),
-                  child: TabBar(dividerColor: Colors.transparent,
+                  child: TabBar(
                     controller: _tabController,
+                    dividerColor: Colors.transparent,
                     indicator: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -151,31 +152,17 @@ class _HomeScreenState extends State<HomeScreen>
                     labelColor: Color(0xff84CB17),
                     unselectedLabelColor: Colors.white,
                     labelStyle: AppTextStyles.smallBodyText.copyWith(
-                      fontSize: 13,
+                      fontSize: isSmallScreen ? 11 : 13,
                       fontWeight: FontWeight.w600,
                     ),
                     unselectedLabelStyle: AppTextStyles.smallBodyText.copyWith(
-                      fontSize: 13,
+                      fontSize: isSmallScreen ? 11 : 13,
                       fontWeight: FontWeight.w500,
                     ),
-                    isScrollable: false,
-                    tabAlignment: TabAlignment.fill,
                     tabs: [
-                      _buildEnhancedTab(
-                        Icons.pending_actions,
-                        'Pending',
-                        '5', // You can make this dynamic
-                      ),
-                      _buildEnhancedTab(
-                        Icons.local_shipping,
-                        'In Progress',
-                        '2',
-                      ),
-                      _buildEnhancedTab(
-                        Icons.check_circle,
-                        'Completed',
-                        '12',
-                      ),
+                      _buildEnhancedTab(Icons.pending_actions, 'Pending'),
+                      _buildEnhancedTab(Icons.local_shipping, 'In Progress'),
+                      _buildEnhancedTab(Icons.check_circle, 'Completed'),
                     ],
                   ),
                 ),
@@ -189,10 +176,7 @@ class _HomeScreenState extends State<HomeScreen>
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.grey[50]!,
-                Colors.white,
-              ],
+              colors: [Colors.grey[50]!, Colors.white],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -200,60 +184,67 @@ class _HomeScreenState extends State<HomeScreen>
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildTabContent(PendingOrdersTab(), 0),
-              _buildTabContent(InProgressOrdersTab(), 1),
-              _buildTabContent(CompletedOrdersTab(), 2),
+              _buildTabContent(PendingOrdersTab()),
+              _buildTabContent(InProgressOrdersTab()),
+              _buildTabContent(CompletedOrdersTab()),
             ],
           ),
         ),
       ),
-
     );
   }
 
-  Widget _buildEnhancedTab(IconData icon, String text, String count) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 6),
+  Widget _buildEnhancedTab(IconData icon, String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-
+          Icon(icon, size: 20),
+          SizedBox(height: 4),
           Text(
             text,
-            style: AppTextStyles.heading2.copyWith(fontSize: 11),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.smallBodyText.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTabContent(Widget child, int index) {
-    return Container(
-      margin: EdgeInsets.only(top: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: Offset(0, -5),
+  Widget _buildTabContent(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          margin: EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: Offset(0, -5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-        child: child,
-      ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }
