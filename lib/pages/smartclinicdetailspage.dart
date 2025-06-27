@@ -18,10 +18,12 @@ class SmartClinicOrderDetailPage extends StatefulWidget {
   const SmartClinicOrderDetailPage({super.key, required this.order});
 
   @override
-  State<SmartClinicOrderDetailPage> createState() => _SmartClinicOrderDetailPageState();
+  State<SmartClinicOrderDetailPage> createState() =>
+      _SmartClinicOrderDetailPageState();
 }
 
-class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage> {
+class _SmartClinicOrderDetailPageState
+    extends State<SmartClinicOrderDetailPage> {
   String? selectedTestId;
   List<Map<String, dynamic>> addonTests = [];
   int addonPrice = 0;
@@ -29,8 +31,6 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
   late String status; // Dynamically fetched status from Firestore
   XFile? proofImage;
   final ImagePicker _picker = ImagePicker();
-
-
 
   Future<void> _addTestToBooking() async {
     if (selectedTestId == null) {
@@ -43,7 +43,11 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       return;
     }
 
-    final doc = await FirebaseFirestore.instance.collection('lab_tests').doc(selectedTestId).get();
+    final doc =
+        await FirebaseFirestore.instance
+            .collection('lab_tests')
+            .doc(selectedTestId)
+            .get();
     if (doc.exists) {
       final data = doc.data()!;
       addonTests.add(data);
@@ -69,7 +73,8 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
   Future<void> _saveAddonTests() async {
     setState(() => isUploading = true);
     try {
-      final docId = widget.order['documentId']; // ✅ get docId from the order map
+      final docId =
+          widget.order['documentId']; // ✅ get docId from the order map
 
       if (docId == null) {
         throw Exception("Booking document ID is missing");
@@ -78,10 +83,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       await FirebaseFirestore.instance
           .collection('smartclinic_booking')
           .doc(docId)
-          .update({
-        'addon_tests': addonTests,
-        'addon_price': addonPrice,
-      });
+          .update({'addon_tests': addonTests, 'addon_price': addonPrice});
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -100,10 +102,13 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       setState(() => isUploading = false);
     }
   }
+
   @override
   void initState() {
     super.initState();
-    status = widget.order['status'] ?? 'pending'; // Fetch current status from Firestore document
+    status =
+        widget.order['status'] ??
+        'pending'; // Fetch current status from Firestore document
   }
 
   // This function updates the status and uploads the proof image if status is completed
@@ -117,7 +122,9 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       );
       return;
     }
-
+    print("dddddddddddddddddd");
+    print(widget.order['documentId']);
+    print("dddddddddddddddddd");
     setState(() => isUploading = true);
 
     try {
@@ -125,19 +132,21 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
 
       // If status is 'completed' and image is selected, upload it to Firebase Storage
       if (status == 'completed' && proofImage != null) {
-        final fileName = 'proofs/${widget.order['documentId']}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final fileName =
+            'proofs/${widget.order['documentId']}_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final ref = FirebaseStorage.instance.ref().child(fileName);
         final uploadTask = await ref.putFile(File(proofImage!.path));
         proofImageUrl = await uploadTask.ref.getDownloadURL();
       }
 
       // Update Firestore document
-      await FirebaseFirestore.instance.collection('smartclinic_booking')
+      await FirebaseFirestore.instance
+          .collection('smartclinic_booking')
           .doc(widget.order['documentId'])
           .update({
-        'status': status,
-        if (proofImageUrl != null) 'proof_image_url': proofImageUrl,
-      });
+            'status': status,
+            if (proofImageUrl != null) 'proof_image_url': proofImageUrl,
+          });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -159,11 +168,14 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
 
   // This function allows the user to pick an image from the gallery or camera
   Future<void> _pickProofImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery); // You can also use ImageSource.camera
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+    ); // You can also use ImageSource.camera
     if (picked != null) {
       setState(() => proofImage = picked);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,11 +190,12 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                 children: [
                   _buildOrderSummaryCard(),
 
-                  const SizedBox(height: 16),  // Enhanced Add-on Tests Section
+                  const SizedBox(height: 16), // Enhanced Add-on Tests Section
                   Card(
                     elevation: 0,
-
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
@@ -192,32 +205,38 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                           colors: [AppColors.white, Colors.grey[50]!],
                         ),
                       ),
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(width * 0.06),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header Section
+                          /// --- Header Section ---
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(width * 0.03),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [Color(0xff84CB17),
-                                      Color(0xff6BA513),],
+                                    colors: [
+                                      Color(0xff84CB17),
+                                      Color(0xff6BA513),
+                                    ],
                                   ),
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.purple.withOpacity(0.3),
                                       blurRadius: 8,
-                                      offset: const Offset(0, 4),
+                                      offset: Offset(0, 4),
                                     ),
                                   ],
                                 ),
-                                child: const Icon(Icons.add_circle, color: Colors.white, size: 26),
+                                child: Icon(
+                                  Icons.add_circle,
+                                  color: Colors.white,
+                                  size: width * 0.065,
+                                ),
                               ),
-                              const SizedBox(width: 16),
+                              SizedBox(width: width * 0.04),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,18 +244,19 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                     Text(
                                       "Add-On Tests",
                                       style: AppTextStyles.bodyText.copyWith(
-                                        fontSize: 22,
+                                        fontSize: width * 0.055,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black87,
                                       ),
                                     ),
                                     Text(
                                       "Enhance your package with additional tests",
-                                      style: AppTextStyles.smallBodyText.copyWith(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                      style: AppTextStyles.smallBodyText
+                                          .copyWith(
+                                            fontSize: width * 0.035,
+                                            color: Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -244,20 +264,23 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                             ],
                           ),
 
-                          const SizedBox(height: 24),
+                          SizedBox(height: height * 0.03),
 
-                          // Test Selection Section
+                          /// --- Test Selection Section ---
                           Container(
-                            padding: const EdgeInsets.all(20),
+                            padding: EdgeInsets.all(width * 0.05),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.lightpacha, width: 1),
+                              border: Border.all(
+                                color: AppColors.lightpacha,
+                                width: 1,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.grey.withOpacity(0.1),
                                   blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  offset: Offset(0, 2),
                                 ),
                               ],
                             ),
@@ -266,12 +289,16 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.search, color: AppColors.lightpacha, size: 20),
-                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.search,
+                                      color: AppColors.lightpacha,
+                                      size: width * 0.05,
+                                    ),
+                                    SizedBox(width: width * 0.02),
                                     Text(
                                       "Select Test",
                                       style: AppTextStyles.bodyText.copyWith(
-                                        fontSize: 16,
+                                        fontSize: width * 0.04,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.black87,
                                       ),
@@ -279,39 +306,51 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                   ],
                                 ),
 
-                                const SizedBox(height: 16),
+                                SizedBox(height: height * 0.02),
 
-                                // Enhanced Dropdown Container
+                                /// --- Dropdown Section ---
                                 Container(
                                   decoration: BoxDecoration(
                                     color: Colors.grey[50],
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.grey[300]!, width: 1),
+                                    border: Border.all(
+                                      color: Colors.grey[300]!,
+                                      width: 1,
+                                    ),
                                   ),
                                   child: StreamBuilder(
-                                    stream: FirebaseFirestore.instance.collection('lab_tests').snapshots(),
+                                    stream:
+                                        FirebaseFirestore.instance
+                                            .collection('lab_tests')
+                                            .snapshots(),
                                     builder: (context, snapshot) {
                                       if (!snapshot.hasData) {
                                         return Container(
-                                          padding: const EdgeInsets.all(20),
+                                          padding: EdgeInsets.all(width * 0.05),
                                           child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               SizedBox(
-                                                width: 20,
-                                                height: 20,
+                                                width: width * 0.05,
+                                                height: width * 0.05,
                                                 child: CircularProgressIndicator(
                                                   strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.lightpacha!),
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(AppColors.lightpacha!),
                                                 ),
                                               ),
-                                              const SizedBox(width: 12),
+                                              SizedBox(width: width * 0.03),
                                               Text(
                                                 "Loading tests...",
-                                                style: AppTextStyles.smallBodyText.copyWith(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 14,
-                                                ),
+                                                style: AppTextStyles
+                                                    .smallBodyText
+                                                    .copyWith(
+                                                      color: Colors.grey[600],
+                                                      fontSize: width * 0.035,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -323,78 +362,116 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                       return SearchableDropdown.single(
                                         hint: Row(
                                           children: [
-                                            Icon(Icons.science, color: Colors.grey[500], size: 18),
-                                            const SizedBox(width: 8),
+                                            Icon(
+                                              Icons.science,
+                                              color: Colors.grey[500],
+                                              size: width * 0.045,
+                                            ),
+                                            SizedBox(width: width * 0.02),
                                             Text(
                                               "Choose a test to add",
-                                              style: AppTextStyles.smallBodyText.copyWith(
-                                                color: Colors.grey[600],
-                                                fontSize: 15,
-                                              ),
+                                              style: AppTextStyles.smallBodyText
+                                                  .copyWith(
+                                                    color: Colors.grey[600],
+                                                    fontSize: width * 0.038,
+                                                  ),
                                             ),
                                           ],
                                         ),
                                         value: selectedTestId,
-                                        items: docs.map((doc) {
-                                          return DropdownMenuItem<String>(
-                                            value: doc.id,
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(vertical: 8),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.all(6),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.blue[100],
-                                                      borderRadius: BorderRadius.circular(8),
-                                                    ),
-                                                    child: Icon(Icons.biotech, color: Colors.blue[600], size: 16),
+                                        items:
+                                            docs.map((doc) {
+                                              return DropdownMenuItem<String>(
+                                                value: doc.id,
+                                                child: Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: height * 0.01,
                                                   ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(
-                                                          doc['TEST_NAME'] ?? 'Unknown Test',
-                                                          style: const TextStyle(
-                                                            fontWeight: FontWeight.w600,
-                                                            fontSize: 14,
-                                                          ),
-                                                          overflow: TextOverflow.ellipsis,
-                                                          maxLines: 1,
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        padding: EdgeInsets.all(
+                                                          width * 0.02,
                                                         ),
-                                                        Text(
-                                                          "₹${doc['PATIENT_RATE'] ?? 0}",
-                                                          style: TextStyle(
-                                                            color: Colors.green[600],
-                                                            fontSize: 12,
-                                                            fontWeight: FontWeight.w500,
-                                                          ),
+                                                        decoration: BoxDecoration(
+                                                          color:
+                                                              Colors.blue[100],
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
                                                         ),
-                                                      ],
-                                                    ),
+                                                        child: Icon(
+                                                          Icons.biotech,
+                                                          color:
+                                                              Colors.blue[600],
+                                                          size: width * 0.04,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: width * 0.03,
+                                                      ),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              doc['TEST_NAME'] ??
+                                                                  'Unknown Test',
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                fontSize:
+                                                                    width *
+                                                                    0.037,
+                                                              ),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              maxLines: 1,
+                                                            ),
+                                                            Text(
+                                                              "₹${doc['PATIENT_RATE'] ?? 0}",
+                                                              style: TextStyle(
+                                                                color:
+                                                                    Colors
+                                                                        .green[600],
+                                                                fontSize:
+                                                                    width *
+                                                                    0.032,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
+                                                ),
+                                              );
+                                            }).toList(),
                                         onChanged: (value) {
-                                          setState(() => selectedTestId = value);
+                                          setState(
+                                            () => selectedTestId = value,
+                                          );
                                         },
                                         isExpanded: true,
                                         iconEnabledColor: AppColors.lightpacha,
-                                        style: const TextStyle(color: Colors.black87),
+                                        style: TextStyle(color: Colors.black87),
                                         underline: Container(),
                                       );
                                     },
                                   ),
                                 ),
 
-                                const SizedBox(height: 16),
+                                SizedBox(height: height * 0.025),
 
-                                // Enhanced Add Button
+                                /// --- Add Button ---
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
@@ -402,17 +479,21 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.lightpacha,
                                       foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: height * 0.02,
+                                      ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       elevation: 4,
-                                      shadowColor: Colors.purple.withOpacity(0.3),
+                                      shadowColor: Colors.purple.withOpacity(
+                                        0.3,
+                                      ),
                                     ),
-                                    child:Text(
+                                    child: Text(
                                       "Add Selected Test",
                                       style: AppTextStyles.bodyText.copyWith(
-                                        fontSize: 16,
+                                        fontSize: width * 0.04,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -428,14 +509,16 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
 
                   const SizedBox(height: 20),
 
-// Enhanced Selected Tests List
+                  // Enhanced Selected Tests List
                   if (addonTests.isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.all(18.0),
                       child: Card(
                         elevation: 0,
                         shadowColor: Colors.indigo.withOpacity(0.2),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
@@ -450,8 +533,10 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                   gradient: LinearGradient(
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
-                                    colors: [Color(0xff84CB17),
-                                      Color(0xff6BA513),],
+                                    colors: [
+                                      Color(0xff84CB17),
+                                      Color(0xff6BA513),
+                                    ],
                                   ),
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(20),
@@ -466,39 +551,51 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                         color: Colors.white.withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: const Icon(Icons.list_alt, color: Colors.white, size: 24),
+                                      child: const Icon(
+                                        Icons.list_alt,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             "Selected Tests",
-                                            style: AppTextStyles.bodyText.copyWith(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
+                                            style: AppTextStyles.bodyText
+                                                .copyWith(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
                                           ),
                                           Text(
                                             "${addonTests.length} test${addonTests.length > 1 ? 's' : ''} selected",
-                                            style: AppTextStyles.smallBodyText.copyWith(
-                                              fontSize: 14,
-                                              color: Colors.white70,
-                                            ),
+                                            style: AppTextStyles.smallBodyText
+                                                .copyWith(
+                                                  fontSize: 14,
+                                                  color: Colors.white70,
+                                                ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(25),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
                                             blurRadius: 0,
                                             offset: const Offset(0, 2),
                                           ),
@@ -507,14 +604,19 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.currency_rupee, color: Colors.green[600], size: 18),
+                                          Icon(
+                                            Icons.currency_rupee,
+                                            color: Colors.green[600],
+                                            size: 18,
+                                          ),
                                           Text(
                                             "$addonPrice",
-                                            style: AppTextStyles.smallBodyText.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.green[700],
-                                              fontSize: 16,
-                                            ),
+                                            style: AppTextStyles.smallBodyText
+                                                .copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green[700],
+                                                  fontSize: 16,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -522,7 +624,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                   ],
                                 ),
                               ),
-                      
+
                               // Tests List
                               Container(
                                 padding: const EdgeInsets.all(16),
@@ -530,19 +632,22 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: addonTests.length,
-                                  separatorBuilder: (context, index) => Container(
-                                    margin: const EdgeInsets.symmetric(vertical: 8),
-                                    height: 1,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.transparent,
-                                          Colors.grey[300]!,
-                                          Colors.transparent,
-                                        ],
+                                  separatorBuilder:
+                                      (context, index) => Container(
+                                        margin: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
+                                        height: 1,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.transparent,
+                                              Colors.grey[300]!,
+                                              Colors.transparent,
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
                                   itemBuilder: (context, index) {
                                     final test = addonTests[index];
                                     return Container(
@@ -551,10 +656,16 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                         gradient: LinearGradient(
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
-                                          colors: [Colors.grey[50]!, Colors.white],
+                                          colors: [
+                                            Colors.grey[50]!,
+                                            Colors.white,
+                                          ],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(color: Colors.grey[200]!, width: 1),
+                                        border: Border.all(
+                                          color: Colors.grey[200]!,
+                                          width: 1,
+                                        ),
                                       ),
                                       child: Row(
                                         children: [
@@ -562,49 +673,74 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                             padding: const EdgeInsets.all(12),
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
-                                                colors: [Color(0xff84CB17),
-                                                  Color(0xff6BA513),],
+                                                colors: [
+                                                  Color(0xff84CB17),
+                                                  Color(0xff6BA513),
+                                                ],
                                               ),
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.blue.withOpacity(0.3),
+                                                  color: Colors.blue
+                                                      .withOpacity(0.3),
                                                   blurRadius: 6,
                                                   offset: const Offset(0, 3),
                                                 ),
                                               ],
                                             ),
-                                            child: const Icon(Icons.science, color: Colors.white, size: 20),
+                                            child: const Icon(
+                                              Icons.science,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
                                           ),
                                           const SizedBox(width: 16),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  test['TEST_NAME'] ?? 'Unknown Test',
-                                                  style: AppTextStyles.smallBodyText.copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 15,
-                                                    color: Colors.black87,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  test['TEST_NAME'] ??
+                                                      'Unknown Test',
+                                                  style: AppTextStyles
+                                                      .smallBodyText
+                                                      .copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        fontSize: 15,
+                                                        color: Colors.black87,
+                                                      ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                   maxLines: 2,
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.green[100],
-                                                    borderRadius: BorderRadius.circular(12),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
                                                   ),
                                                   child: Text(
                                                     "₹${test['PATIENT_RATE'] ?? 0}",
-                                                    style:AppTextStyles.smallBodyText.copyWith(
-                                                      color: Colors.green[700],
-                                                      fontWeight: FontWeight.w600,
-                                                      fontSize: 14,
-                                                    ),
+                                                    style: AppTextStyles
+                                                        .smallBodyText
+                                                        .copyWith(
+                                                          color:
+                                                              Colors.green[700],
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 14,
+                                                        ),
                                                   ),
                                                 ),
                                               ],
@@ -614,12 +750,21 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                                           Container(
                                             decoration: BoxDecoration(
                                               color: Colors.red[50],
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
                                             child: IconButton(
-                                              icon: Icon(Icons.delete_outline, color: Colors.red[600], size: 22),
-                                              onPressed: () => _removeTest(index),
-                                              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red[600],
+                                                size: 22,
+                                              ),
+                                              onPressed:
+                                                  () => _removeTest(index),
+                                              constraints: const BoxConstraints(
+                                                minWidth: 40,
+                                                minHeight: 40,
+                                              ),
                                               tooltip: "Remove test",
                                             ),
                                           ),
@@ -634,8 +779,6 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                         ),
                       ),
                     ),
-
-
 
                     // Enhanced Save Button
                     Padding(
@@ -655,7 +798,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                         child: ElevatedButton(
                           onPressed: isUploading ? null : _saveAddonTests,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:AppColors.lightpacha,
+                            backgroundColor: AppColors.lightpacha,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             shape: RoundedRectangleBorder(
@@ -663,41 +806,45 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                             ),
                             elevation: 0,
                           ),
-                          child: isUploading
-                              ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              const Text(
-                                "Saving Tests...",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          )
-                              : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-
-                              Text(
-                                "Save Add-On Tests",
-                                style: AppTextStyles.smallBodyText.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
+                          child:
+                              isUploading
+                                  ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      const Text(
+                                        "Saving Tests...",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Save Add-On Tests",
+                                        style: AppTextStyles.smallBodyText
+                                            .copyWith(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
                         ),
                       ),
                     ),
@@ -726,9 +873,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
 
                   // Action Buttons
                   // _buildActionButtons(),
-
                   const SizedBox(height: 32),
-
                 ],
               ),
             ),
@@ -744,8 +889,6 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     double latitude = geoPoint?.latitude ?? 0.0;
     double longitude = geoPoint?.longitude ?? 0.0;
 
-
-
     // Responsive sizing
     double iconSize = width * 0.08;
     double headingFontSize = width * 0.05;
@@ -753,7 +896,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     double boxPadding = width * 0.035;
 
     return SliverAppBar(
-      expandedHeight: width * 0.33, // ~268px on 800px height
+      expandedHeight: height * 0.30,
       floating: false,
       pinned: true,
       backgroundColor: AppColors.lightpacha,
@@ -764,7 +907,11 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
           borderRadius: BorderRadius.circular(12),
         ),
         child: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: Colors.white, size: iconSize * 0.9),
+          icon: Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+            size: iconSize * 0.9,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -789,11 +936,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xff84CB17),
-                Color(0xff6BA513),
-                Color(0xff5A8F0F),
-              ],
+              colors: [Color(0xff84CB17), Color(0xff6BA513), Color(0xff5A8F0F)],
             ),
           ),
           child: SafeArea(
@@ -868,23 +1011,19 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.blue[50]!,
-              Colors.indigo[50]!,
-            ],
+            colors: [Colors.blue[50]!, Colors.indigo[50]!],
           ),
         ),
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(width * 0.05),
         child: Column(
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(width * 0.03),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xff84CB17),
-                        Color(0xff6BA513),],
+                    gradient: const LinearGradient(
+                      colors: [Color(0xff84CB17), Color(0xff6BA513)],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
@@ -895,9 +1034,13 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
+                  child: Icon(
+                    Icons.receipt_long,
+                    color: Colors.white,
+                    size: width * 0.06,
+                  ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: width * 0.04),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -905,15 +1048,16 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                       Text(
                         'Order Summary',
                         style: AppTextStyles.bodyText.copyWith(
-                          fontSize: 20,
+                          fontSize: width * 0.05,
                           fontWeight: FontWeight.w500,
                           color: Colors.black87,
                         ),
                       ),
+                      SizedBox(height: height * 0.005),
                       Text(
                         'Booked on ${_formatDate(widget.order['createdAt'])}',
                         style: AppTextStyles.smallBodyText.copyWith(
-                          fontSize: 14,
+                          fontSize: width * 0.035,
                           color: Colors.grey[600],
                         ),
                       ),
@@ -921,7 +1065,10 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: width * 0.035,
+                    vertical: height * 0.01,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.lightpacha,
                     borderRadius: BorderRadius.circular(20),
@@ -930,8 +1077,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                   child: Text(
                     '₹${widget.order['servicePrice'] ?? 0}',
                     style: AppTextStyles.smallBodyText.copyWith(
-                      fontSize: 16,
-
+                      fontSize: width * 0.04,
                       color: Colors.white,
                     ),
                   ),
@@ -944,7 +1090,6 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     );
   }
 
-
   Widget _buildStatusSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -956,9 +1101,13 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
           value: status,
-          items: ['pending', 'in-progress', 'completed'].map((status) {
-            return DropdownMenuItem(value: status, child: Text(status.toUpperCase()));
-          }).toList(),
+          items:
+              ['pending', 'in-progress', 'completed'].map((status) {
+                return DropdownMenuItem(
+                  value: status,
+                  child: Text(status.toUpperCase()),
+                );
+              }).toList(),
           onChanged: (value) {
             setState(() => status = value!);
           },
@@ -972,7 +1121,9 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
           ElevatedButton.icon(
             onPressed: _pickProofImage,
             icon: const Icon(Icons.image),
-            label: Text(proofImage == null ? 'Upload Proof Image' : 'Change Proof Image'),
+            label: Text(
+              proofImage == null ? 'Upload Proof Image' : 'Change Proof Image',
+            ),
           ),
           const SizedBox(height: 8),
           if (proofImage != null)
@@ -982,24 +1133,23 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     );
   }
 
-
   Widget buildCompactContactWidget({
     required double latitude,
     required double longitude,
     required String phoneNumber,
   }) {
     return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      height: height * 0.07, // e.g. ~50 on 700px height
+      margin: EdgeInsets.symmetric(horizontal: width * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(height * 0.035),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.15),
             spreadRadius: 1,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -1010,12 +1160,12 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             child: GestureDetector(
               onTap: () => _openGoogleMaps(latitude, longitude),
               child: Container(
-                height: 50,
+                height: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(25),
-                    bottomLeft: Radius.circular(25),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(height * 0.035),
+                    bottomLeft: Radius.circular(height * 0.035),
                   ),
                 ),
                 child: Row(
@@ -1024,15 +1174,15 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                     Icon(
                       Icons.map_outlined,
                       color: Colors.blue[600],
-                      size: 20,
+                      size: width * 0.05, // responsive icon size
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: width * 0.015),
                     Text(
                       'Maps',
                       style: TextStyle(
                         color: Colors.blue[700],
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: width * 0.035,
                       ),
                     ),
                   ],
@@ -1044,21 +1194,21 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
           // Divider
           Container(
             width: 1,
-            height: 30,
+            height: height * 0.035,
             color: Colors.grey.withOpacity(0.3),
           ),
 
-          // Phone Button
+          // Call Button
           Expanded(
             child: GestureDetector(
               onTap: () => _makePhoneCall(phoneNumber),
               child: Container(
-                height: 50,
+                height: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(height * 0.035),
+                    bottomRight: Radius.circular(height * 0.035),
                   ),
                 ),
                 child: Row(
@@ -1067,15 +1217,15 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                     Icon(
                       Icons.phone_outlined,
                       color: Colors.green[600],
-                      size: 20,
+                      size: width * 0.05,
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: width * 0.015),
                     Text(
                       'Call',
                       style: TextStyle(
                         color: Colors.green[700],
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontSize: width * 0.035,
                       ),
                     ),
                   ],
@@ -1088,24 +1238,27 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     );
   }
 
-// Alternative version with just icons (even more compact)
   Widget buildCompactContactWidgetIconsOnly({
     required double latitude,
     required double longitude,
     required String phoneNumber,
   }) {
+    final containerHeight = height * 0.065; // ~50 on typical phones
+    final borderRadius = containerHeight / 2;
+    final iconSize = width * 0.055; // ~24 on 430px wide screen
+
     return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      height: containerHeight,
+      margin: EdgeInsets.symmetric(horizontal: width * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.15),
             spreadRadius: 1,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -1116,18 +1269,20 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             child: GestureDetector(
               onTap: () => _openGoogleMaps(latitude, longitude),
               child: Container(
-                height: 50,
+                height: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(25),
-                    bottomLeft: Radius.circular(25),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(borderRadius),
+                    bottomLeft: Radius.circular(borderRadius),
                   ),
                 ),
-                child: Icon(
-                  Icons.map_outlined,
-                  color: Colors.blue[600],
-                  size: 24,
+                child: Center(
+                  child: Icon(
+                    Icons.map_outlined,
+                    color: Colors.blue[600],
+                    size: iconSize,
+                  ),
                 ),
               ),
             ),
@@ -1136,7 +1291,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
           // Divider
           Container(
             width: 1,
-            height: 30,
+            height: containerHeight * 0.6,
             color: Colors.grey.withOpacity(0.3),
           ),
 
@@ -1145,18 +1300,20 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             child: GestureDetector(
               onTap: () => _makePhoneCall(phoneNumber),
               child: Container(
-                height: 50,
+                height: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(25),
-                    bottomRight: Radius.circular(25),
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(borderRadius),
+                    bottomRight: Radius.circular(borderRadius),
                   ),
                 ),
-                child: Icon(
-                  Icons.phone_outlined,
-                  color: Colors.green[600],
-                  size: 24,
+                child: Center(
+                  child: Icon(
+                    Icons.phone_outlined,
+                    color: Colors.green[600],
+                    size: iconSize,
+                  ),
                 ),
               ),
             ),
@@ -1166,9 +1323,10 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     );
   }
 
-// Helper functions (same as before)
+  // Helper functions (same as before)
   Future<void> _openGoogleMaps(double latitude, double longitude) async {
-    final String googleMapsUrl = 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    final String googleMapsUrl =
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
 
     try {
       await launchUrl(
@@ -1223,11 +1381,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                   ),
                 ],
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: Icon(icon, color: Colors.white, size: 28),
             ),
             const SizedBox(height: 12),
             Text(
@@ -1244,14 +1398,12 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     );
   }
 
-
-
   Widget buildStatusDropdown() {
     return Container(
-      margin: const EdgeInsets.all(16.0),
+      margin: EdgeInsets.all(width * 0.04), // ~16.0
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(width * 0.05),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -1262,26 +1414,26 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(width * 0.06), // ~24.0
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Enhanced Title Section
+            // Header
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(width * 0.02),
                   decoration: BoxDecoration(
                     color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(width * 0.025),
                   ),
                   child: Icon(
                     Icons.assignment_turned_in,
                     color: AppColors.lightpacha,
-                    size: 24,
+                    size: width * 0.06,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: width * 0.03),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1289,7 +1441,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                       'Update Booking Status',
                       style: AppTextStyles.bodyText.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 18,
+                        fontSize: width * 0.045,
                         color: Colors.grey[800],
                         letterSpacing: 0.5,
                       ),
@@ -1297,7 +1449,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                     Text(
                       'Manage your booking progress',
                       style: AppTextStyles.smallBodyText.copyWith(
-                        fontSize: 14,
+                        fontSize: width * 0.035,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -1305,225 +1457,251 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: height * 0.03),
 
-            // Enhanced Dropdown Section
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Current Status',
-                  style: AppTextStyles.bodyText.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                    color: Colors.grey[50],
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: status,
-                    items: [
-                      {'value': 'approved', 'color': Colors.orange, 'icon': Icons.check_circle_outline},
-                      {'value': 'pending', 'color': Colors.amber, 'icon': Icons.schedule},
-                      {'value': 'in-progress', 'color': Colors.blue, 'icon': Icons.work_outline},
-                      {'value': 'completed', 'color': Colors.green, 'icon': Icons.task_alt},
+            // Dropdown
+            Text(
+              'Current Status',
+              style: AppTextStyles.bodyText.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: width * 0.04,
+                color: Colors.grey[700],
+              ),
+            ),
+            SizedBox(height: height * 0.01),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(width * 0.04),
+                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                color: Colors.grey[50],
+              ),
+              child: DropdownButtonFormField<String>(
+                value: status,
+                items:
+                    [
+                      {
+                        'value': 'approved',
+                        'color': Colors.orange,
+                        'icon': Icons.check_circle_outline,
+                      },
+                      {
+                        'value': 'pending',
+                        'color': Colors.amber,
+                        'icon': Icons.schedule,
+                      },
+                      {
+                        'value': 'in-progress',
+                        'color': Colors.blue,
+                        'icon': Icons.work_outline,
+                      },
+                      {
+                        'value': 'completed',
+                        'color': Colors.green,
+                        'icon': Icons.task_alt,
+                      },
                     ].map((statusItem) {
-                      return DropdownMenuItem(
+                      return DropdownMenuItem<String>(
                         value: statusItem['value'] as String,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Row(
-                            children: [
-                              Icon(
-                                statusItem['icon'] as IconData,
+                        child: Row(
+                          children: [
+                            Icon(
+                              statusItem['icon'] as IconData,
+                              color: statusItem['color'] as Color,
+                              size: width * 0.05,
+                            ),
+                            SizedBox(width: width * 0.025),
+                            Text(
+                              (statusItem['value'] as String).toUpperCase(),
+                              style: AppTextStyles.bodyText.copyWith(
                                 color: statusItem['color'] as Color,
-                                size: 20,
+                                fontWeight: FontWeight.w600,
+                                fontSize: width * 0.035,
                               ),
-                              const SizedBox(width: 10),
-                              Text(
-                                (statusItem['value'] as String).toUpperCase(),
-                                style: AppTextStyles.bodyText.copyWith(
-                                  color: statusItem['color'] as Color,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     }).toList(),
-                    onChanged: (value) {
-                      setState(() => status = value!);
-                    },
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      hintText: 'Select status',
-                      hintStyle: AppTextStyles.bodyText.copyWith(color: Colors.grey[400]),
-                    ),
-                    dropdownColor: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
+                onChanged: (value) {
+                  setState(() => status = value!);
+                },
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: width * 0.04,
+                    vertical: height * 0.015,
+                  ),
+                  hintText: 'Select status',
+                  hintStyle: AppTextStyles.bodyText.copyWith(
+                    color: Colors.grey[400],
                   ),
                 ),
-              ],
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(width * 0.03),
+                icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
+              ),
             ),
+            SizedBox(height: height * 0.03),
 
-            const SizedBox(height: 24),
-
-            // Enhanced Image Upload Section
+            // Image Upload Section
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
               height: status == 'completed' ? null : 0,
-              child: status == 'completed'
-                  ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Proof of Completion',
-                    style: AppTextStyles.bodyText.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Image Upload Button
-                  GestureDetector(
-                    onTap: _pickProofImage,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: proofImage == null ? Colors.green[50] : Colors.green[100],
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.green.withOpacity(0.3),
-                          style: BorderStyle.solid,
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
+              child:
+                  status == 'completed'
+                      ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            proofImage == null ? Icons.cloud_upload_outlined : Icons.edit,
-                            color: Colors.green[600],
-                            size: 32,
-                          ),
-                          const SizedBox(height: 8),
                           Text(
-                            proofImage == null ? 'Upload Proof Image' : 'Change Proof Image',
+                            'Proof of Completion',
                             style: AppTextStyles.bodyText.copyWith(
-                              color: Colors.green[700],
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                              fontSize: width * 0.04,
+                              color: Colors.grey[700],
                             ),
                           ),
-                          Text(
-                            'Tap to ${proofImage == null ? 'select' : 'change'} image',
-                            style: AppTextStyles.bodyText.copyWith(
-                              color: Colors.green[600],
-                              fontSize: 12,
+                          SizedBox(height: height * 0.015),
+                          GestureDetector(
+                            onTap: _pickProofImage,
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.all(width * 0.045),
+                              decoration: BoxDecoration(
+                                color:
+                                    proofImage == null
+                                        ? Colors.green[50]
+                                        : Colors.green[100],
+                                borderRadius: BorderRadius.circular(
+                                  width * 0.04,
+                                ),
+                                border: Border.all(
+                                  color: Colors.green.withOpacity(0.3),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    proofImage == null
+                                        ? Icons.cloud_upload_outlined
+                                        : Icons.edit,
+                                    color: Colors.green[600],
+                                    size: width * 0.08,
+                                  ),
+                                  SizedBox(height: height * 0.01),
+                                  Text(
+                                    proofImage == null
+                                        ? 'Upload Proof Image'
+                                        : 'Change Proof Image',
+                                    style: AppTextStyles.bodyText.copyWith(
+                                      color: Colors.green[700],
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: width * 0.04,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Tap to ${proofImage == null ? 'select' : 'change'} image',
+                                    style: AppTextStyles.bodyText.copyWith(
+                                      color: Colors.green[600],
+                                      fontSize: width * 0.03,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+                          if (proofImage != null) ...[
+                            SizedBox(height: height * 0.02),
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  width * 0.04,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(
+                                  width * 0.04,
+                                ),
+                                child: Image.file(
+                                  File(proofImage!.path),
+                                  height: height * 0.25,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ],
+                          SizedBox(height: height * 0.03),
                         ],
-                      ),
-                    ),
-                  ),
-
-                  // Image Preview
-                  if (proofImage != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          File(proofImage!.path),
-                          height: 200,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                ],
-              )
-                  : const SizedBox.shrink(),
+                      )
+                      : const SizedBox.shrink(),
             ),
 
-            // Enhanced Save Button
-            Container(
+            // Save Button
+            SizedBox(
               width: double.infinity,
-              height: 56,
+              height: height * 0.07,
               child: ElevatedButton(
                 onPressed: isUploading ? null : _updateStatus,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isUploading ? Colors.grey[300] : AppColors.lightpacha,
+                  backgroundColor:
+                      isUploading ? Colors.grey[300] : AppColors.lightpacha,
                   foregroundColor: Colors.white,
                   elevation: isUploading ? 0 : 4,
                   shadowColor: Colors.blue.withOpacity(0.3),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(width * 0.04),
                   ),
                 ),
-                child: isUploading
-                    ? Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Updating...',
-                      style: AppTextStyles.bodyText.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue[600],
-                      ),
-                    ),
-                  ],
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.save, size: 20),
-                    const SizedBox(width: 8),
-                     Text(
-                      'Save Status',
-                      style: AppTextStyles.bodyText.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+                child:
+                    isUploading
+                        ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: width * 0.05,
+                              height: width * 0.05,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.blue[600]!,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: width * 0.03),
+                            Text(
+                              'Updating...',
+                              style: AppTextStyles.bodyText.copyWith(
+                                fontSize: width * 0.04,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue[600],
+                              ),
+                            ),
+                          ],
+                        )
+                        : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.save, size: width * 0.05),
+                            SizedBox(width: width * 0.025),
+                            Text(
+                              'Save Status',
+                              style: AppTextStyles.bodyText.copyWith(
+                                fontSize: width * 0.04,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
               ),
             ),
           ],
@@ -1540,12 +1718,38 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       backgroundColor: AppColors.lightpacha,
       child: Column(
         children: [
-          _buildModernInfoRow(Icons.badge, 'Name', widget.order['patientName'] ?? 'Unknown'),
-          _buildModernInfoRow(Icons.phone, 'Phone', widget.order['phoneNumber'] ?? 'N/A'),
-          _buildModernInfoRow(Icons.cake, 'Age', '${widget.order['age'] ?? 'N/A'} years'),
-          _buildModernInfoRow(Icons.person_outline, 'Gender', widget.order['gender'] ?? 'N/A'),
-          _buildModernInfoRow(Icons.group, 'Booking For', widget.order['bookingFor'] ?? 'N/A'),
-          _buildModernInfoRow(Icons.location_on, 'Address', widget.order['address'] ?? 'N/A', isLast: true, isAddress: true),
+          _buildModernInfoRow(
+            Icons.badge,
+            'Name',
+            widget.order['patientName'] ?? 'Unknown',
+          ),
+          _buildModernInfoRow(
+            Icons.phone,
+            'Phone',
+            widget.order['phoneNumber'] ?? 'N/A',
+          ),
+          _buildModernInfoRow(
+            Icons.cake,
+            'Age',
+            '${widget.order['age'] ?? 'N/A'} years',
+          ),
+          _buildModernInfoRow(
+            Icons.person_outline,
+            'Gender',
+            widget.order['gender'] ?? 'N/A',
+          ),
+          _buildModernInfoRow(
+            Icons.group,
+            'Booking For',
+            widget.order['bookingFor'] ?? 'N/A',
+          ),
+          _buildModernInfoRow(
+            Icons.location_on,
+            'Address',
+            widget.order['address'] ?? 'N/A',
+            isLast: true,
+            isAddress: true,
+          ),
         ],
       ),
     );
@@ -1555,15 +1759,30 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     return _buildModernCard(
       title: 'Service Details',
       icon: Icons.medical_services,
-      iconColor: AppColors.
-      white,
-      backgroundColor:AppColors.lightpacha
-      ,
+      iconColor: AppColors.white,
+      backgroundColor: AppColors.lightpacha,
       child: Column(
         children: [
-          _buildModernInfoRow(Icons.science, 'Test Name', widget.order['serviceName'] ?? 'N/A'),
-          _buildModernInfoRow(Icons.category, 'Type', widget.order['bookingType']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'N/A'),
-          _buildModernInfoRow(Icons.inventory, 'Package', widget.order['isPackage'] == true ? 'Yes' : 'No', isLast: true),
+          _buildModernInfoRow(
+            Icons.science,
+            'Test Name',
+            widget.order['serviceName'] ?? 'N/A',
+          ),
+          _buildModernInfoRow(
+            Icons.category,
+            'Type',
+            widget.order['bookingType']
+                    ?.toString()
+                    .replaceAll('_', ' ')
+                    .toUpperCase() ??
+                'N/A',
+          ),
+          _buildModernInfoRow(
+            Icons.inventory,
+            'Package',
+            widget.order['isPackage'] == true ? 'Yes' : 'No',
+            isLast: true,
+          ),
         ],
       ),
     );
@@ -1577,9 +1796,22 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       backgroundColor: AppColors.lightpacha,
       child: Column(
         children: [
-          _buildModernInfoRow(Icons.calendar_today, 'Date', _formatDate(widget.order['selectedDate'])),
-          _buildModernInfoRow(Icons.access_time, 'Time Slot', widget.order['selectedTimeSlot'] ?? 'N/A'),
-          _buildModernInfoRow(Icons.history, 'Booked On', _formatDate(widget.order['createdAt']), isLast: true),
+          _buildModernInfoRow(
+            Icons.calendar_today,
+            'Date',
+            _formatDate(widget.order['selectedDate']),
+          ),
+          _buildModernInfoRow(
+            Icons.access_time,
+            'Time Slot',
+            widget.order['selectedTimeSlot'] ?? 'N/A',
+          ),
+          _buildModernInfoRow(
+            Icons.history,
+            'Booked On',
+            _formatDate(widget.order['createdAt']),
+            isLast: true,
+          ),
         ],
       ),
     );
@@ -1593,19 +1825,28 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
       backgroundColor: AppColors.lightpacha,
       child: Column(
         children: [
-          _buildModernInfoRow(Icons.credit_card, 'Payment Method',
-              widget.order['selectedPaymentMethod']?.toString().replaceAll('_', ' ').toUpperCase() ?? 'N/A'),
-          const SizedBox(height: 16),
+          _buildModernInfoRow(
+            Icons.credit_card,
+            'Payment Method',
+            widget.order['selectedPaymentMethod']
+                    ?.toString()
+                    .replaceAll('_', ' ')
+                    .toUpperCase() ??
+                'N/A',
+          ),
+          SizedBox(height: height * 0.02),
+
+          // Payment Box
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(width * 0.05), // ~20
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.lightpacha,AppColors.lightpacha],
+                colors: [AppColors.lightpacha, AppColors.lightpacha],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(width * 0.04), // ~16
               boxShadow: [
                 BoxShadow(
                   color: Colors.green.withOpacity(0.3),
@@ -1617,6 +1858,7 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Left Side Text
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1624,31 +1866,33 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                       'Total Amount',
                       style: AppTextStyles.heading2.copyWith(
                         color: Colors.white70,
-                        fontSize: 14,
+                        fontSize: width * 0.035, // ~14
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: height * 0.005),
                     Text(
                       '₹${widget.order['servicePrice'] ?? 0}',
                       style: AppTextStyles.bodyText.copyWith(
                         color: Colors.white,
-                        fontSize: 28,
+                        fontSize: width * 0.07, // ~28
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
+
+                // Right Side Icon
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(width * 0.03), // ~12
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(width * 0.03),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.currency_rupee,
                     color: Colors.white,
-                    size: 24,
+                    size: width * 0.06, // ~24
                   ),
                 ),
               ],
@@ -1712,23 +1956,25 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     return Card(
       elevation: 8,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(width * 0.05),
+      ), // ~20
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(width * 0.05),
           color: Colors.white,
         ),
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(width * 0.05), // ~20
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(width * 0.03), // ~12
                   decoration: BoxDecoration(
                     color: backgroundColor,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(width * 0.04), // ~16
                     boxShadow: [
                       BoxShadow(
                         color: iconColor.withOpacity(0.2),
@@ -1737,20 +1983,24 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
                       ),
                     ],
                   ),
-                  child: Icon(icon, color: iconColor, size: 24),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: width * 0.06, // ~24
+                  ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: width * 0.04), // ~16
                 Text(
                   title,
                   style: AppTextStyles.bodyText.copyWith(
-                    fontSize: 20,
+                    fontSize: width * 0.05, // ~20
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: height * 0.025), // ~20
             child,
           ],
         ),
@@ -1758,35 +2008,45 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
     );
   }
 
-  Widget _buildModernInfoRow(IconData icon, String label, String value, {bool isLast = false, bool isAddress = false}) {
+  Widget _buildModernInfoRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool isLast = false,
+    bool isAddress = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: EdgeInsets.symmetric(vertical: height * 0.015), // ~12
       decoration: BoxDecoration(
-        border: isLast ? null : Border(
-          bottom: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1,
-          ),
-        ),
+        border:
+            isLast
+                ? null
+                : Border(
+                  bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+                ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(width * 0.015), // ~6
             decoration: BoxDecoration(
               color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(width * 0.02), // ~8
             ),
-            child: Icon(icon, size: 16, color: Colors.grey[600]),
+            child: Icon(
+              icon,
+              size: width * 0.04,
+              color: Colors.grey[600],
+            ), // ~16
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: width * 0.03), // ~12
           Expanded(
             flex: 2,
             child: Text(
               label,
               style: AppTextStyles.smallBodyText.copyWith(
-                fontSize: 14,
+                fontSize: width * 0.035, // ~14
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
@@ -1797,13 +2057,14 @@ class _SmartClinicOrderDetailPageState extends State<SmartClinicOrderDetailPage>
             child: Text(
               value,
               style: AppTextStyles.bodyText.copyWith(
-                fontSize: 14,
+                fontSize: width * 0.035, // ~14
                 color: Colors.black87,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.right,
               maxLines: isAddress ? 3 : 1,
-              overflow: isAddress ? TextOverflow.visible : TextOverflow.ellipsis,
+              overflow:
+                  isAddress ? TextOverflow.visible : TextOverflow.ellipsis,
             ),
           ),
         ],

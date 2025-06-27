@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:driver_app/common/color.dart';
 import 'package:driver_app/common/textstyles.dart';
@@ -5,38 +7,58 @@ import 'package:flutter/material.dart';
 import 'package:driver_app/app.dart';
 
 class CompletedOrdersTab extends StatelessWidget {
-  Future<List<Map<String, dynamic>>> _fetchCompletedOrders() async {
-    final List<Map<String, dynamic>> allOrders = [];
+  Stream<List<Map<String, dynamic>>> _listenToCompletedOrders() {
+    final controller = StreamController<List<Map<String, dynamic>>>.broadcast();
 
-    final List<Map<String, String>> collections = [
-      {'name': 'smartclinic_booking', 'type': 'smart-clinic'},
-      {'name': 'pharmacyorders', 'type': 'pharmacy'},
-    ];
+    List<Map<String, dynamic>> smartClinicOrders = [];
+    List<Map<String, dynamic>> pharmacyOrders = [];
 
-    for (final collection in collections) {
-      Query query = FirebaseFirestore.instance.collection(collection['name']!);
-      query = query.where('status', isEqualTo: 'completed');
+    void emitCombined() {
+      final allOrders = [...smartClinicOrders, ...pharmacyOrders];
 
-      final querySnapshot = await query.get();
+      allOrders.sort((a, b) {
+        final aTime = a['timestamp'] as Timestamp?;
+        final bTime = b['timestamp'] as Timestamp?;
+        if (aTime != null && bTime != null) {
+          return bTime.compareTo(aTime);
+        }
+        return 0;
+      });
 
-      for (final doc in querySnapshot.docs) {
-        final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
-        data['source'] = collection['type'];
-        allOrders.add(data);
-      }
+      controller.add(allOrders);
     }
 
-    allOrders.sort((a, b) {
-      final aTime = a['timestamp'] as Timestamp?;
-      final bTime = b['timestamp'] as Timestamp?;
-      if (aTime != null && bTime != null) {
-        return bTime.compareTo(aTime);
-      }
-      return 0;
+    // Smart Clinic listener
+    FirebaseFirestore.instance
+        .collection('smartclinic_booking')
+        .where('status', isEqualTo: 'completed')
+        .snapshots()
+        .listen((snapshot) {
+      smartClinicOrders = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        data['source'] = 'smart-clinic';
+        return data;
+      }).toList();
+      emitCombined();
     });
 
-    return allOrders;
+    // Pharmacy listener
+    FirebaseFirestore.instance
+        .collection('pharmacyorders')
+        .where('status', isEqualTo: 'completed')
+        .snapshots()
+        .listen((snapshot) {
+      pharmacyOrders = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        data['source'] = 'pharmacy';
+        return data;
+      }).toList();
+      emitCombined();
+    });
+
+    return controller.stream;
   }
 
   String _formatTimestamp(dynamic timestamp) {
@@ -55,8 +77,8 @@ class CompletedOrdersTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchCompletedOrders(),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _listenToCompletedOrders(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
