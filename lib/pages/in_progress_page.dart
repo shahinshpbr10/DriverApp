@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:driver_app/common/color.dart';
 import 'package:driver_app/common/textstyles.dart';
@@ -7,43 +9,58 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 class InProgressOrdersTab extends StatelessWidget {
-  Future<List<Map<String, dynamic>>> _fetchInProgressOrders() async {
-    final List<Map<String, dynamic>> allOrders = [];
+  Stream<List<Map<String, dynamic>>> _listenToInProgressOrders() {
+    final controller = StreamController<List<Map<String, dynamic>>>();
 
-    final List<Map<String, String>> collections = [
-      {'name': 'smartclinic_booking', 'type': 'smart-clinic'},
-      {'name': 'pharmacyorders', 'type': 'pharmacy'},
-    ];
+    List<Map<String, dynamic>> smartClinicOrders = [];
+    List<Map<String, dynamic>> pharmacyOrders = [];
 
-    for (final collection in collections) {
-      Query query = FirebaseFirestore.instance.collection(collection['name']!);
+    void emitCombined() {
+      final combined = [...smartClinicOrders, ...pharmacyOrders];
 
-      if (collection['type'] == 'smart-clinic') {
-        query = query.where('status', isEqualTo: 'in-progress');
-      } else if (collection['type'] == 'pharmacy') {
-        query = query.where('status', isEqualTo: 'pending');
-      }
+      combined.sort((a, b) {
+        final aTime = a['timestamp'] as Timestamp?;
+        final bTime = b['timestamp'] as Timestamp?;
+        if (aTime != null && bTime != null) {
+          return bTime.compareTo(aTime);
+        }
+        return 0;
+      });
 
-      final querySnapshot = await query.get();
-
-      for (final doc in querySnapshot.docs) {
-        final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
-        data['source'] = collection['type'];
-        allOrders.add(data);
-      }
+      controller.add(combined);
     }
 
-    allOrders.sort((a, b) {
-      final aTime = a['timestamp'] as Timestamp?;
-      final bTime = b['timestamp'] as Timestamp?;
-      if (aTime != null && bTime != null) {
-        return bTime.compareTo(aTime);
-      }
-      return 0;
+    // Listen to smart clinic "in-progress" orders
+    FirebaseFirestore.instance
+        .collection('smartclinic_booking')
+        .where('status', isEqualTo: 'in-progress')
+        .snapshots()
+        .listen((snapshot) {
+      smartClinicOrders = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        data['source'] = 'smart-clinic';
+        return data;
+      }).toList();
+      emitCombined();
     });
 
-    return allOrders;
+    // Listen to pharmacy "pending" orders
+    FirebaseFirestore.instance
+        .collection('pharmacyorders')
+        .where('status', isEqualTo: 'in-progress')
+        .snapshots()
+        .listen((snapshot) {
+      pharmacyOrders = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        data['source'] = 'pharmacy';
+        return data;
+      }).toList();
+      emitCombined();
+    });
+
+    return controller.stream;
   }
 
   String _formatTimestamp(dynamic timestamp) {
@@ -67,8 +84,8 @@ class InProgressOrdersTab extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchInProgressOrders(),
+      body:StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _listenToInProgressOrders(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
