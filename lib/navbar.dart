@@ -9,8 +9,7 @@ class CustomNavbar extends StatefulWidget {
   _CustomNavbarState createState() => _CustomNavbarState();
 }
 
-class _CustomNavbarState extends State<CustomNavbar>
-    with TickerProviderStateMixin {
+class _CustomNavbarState extends State<CustomNavbar> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;

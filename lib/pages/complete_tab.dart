@@ -310,51 +310,111 @@ class CompletedOrdersTab extends StatelessWidget {
         minChildSize: 0.5,
         builder: (context, scrollController) => Container(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, -2),
+              ),
+            ],
           ),
           child: Column(
             children: [
+              // Enhanced Header
               Container(
-                width: width * 0.1,
-                height: height * 0.006,
-                margin: EdgeInsets.symmetric(vertical: height * 0.015),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: EdgeInsets.all(width * 0.05),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Column(
                   children: [
-                    Text(
-                      'Order Details',
-                      style: TextStyle(fontSize: width * 0.06, fontWeight: FontWeight.w700, color: Colors.grey[800]),
+                    // Drag Handle
+                    Container(
+                      width: 48,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                    SizedBox(height: height * 0.02),
-                    ...order.entries.map((entry) => Padding(
-                      padding: EdgeInsets.only(bottom: height * 0.01),
+                    SizedBox(height: 20),
+
+                    // Title Section with Icon
+                    Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue[600]!, Colors.blue[800]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SizedBox(
-                            width: width * 0.3,
-                            child: Text(
-                              '${entry.key}:',
-                              style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.receipt_long,
+                              color: Colors.white,
+                              size: 28,
                             ),
                           ),
+                          SizedBox(width: 16),
                           Expanded(
-                            child: Text(
-                              entry.value.toString(),
-                              style: TextStyle(color: Colors.grey[800]),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Order Details',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Complete Order Information',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    )).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    SizedBox(height: 10),
+
+                    // Organize order data into sections
+                    ..._buildOrderSections(order),
+
+                    SizedBox(height: 32),
                   ],
                 ),
               ),
@@ -364,4 +424,334 @@ class CompletedOrdersTab extends StatelessWidget {
       ),
     );
   }
-}
+
+  List<Widget> _buildOrderSections(Map<String, dynamic> order) {
+    List<Widget> sections = [];
+
+    // Filter out Firebase and technical fields
+    Map<String, dynamic> filteredOrder = _filterOrder(order);
+
+    // Define sections with their fields and icons
+    Map<String, Map<String, dynamic>> sectionConfig = {
+      'Basic Information': {
+        'icon': Icons.info_outline,
+        'color': Colors.blue[600]!,
+        'fields': ['id', 'orderId', 'orderNumber', 'status', 'type']
+      },
+      'Customer Details': {
+        'icon': Icons.person_outline,
+        'color': Colors.green[600]!,
+        'fields': ['customerName', 'patientName', 'userId', 'email', 'phone', 'phoneNumber']
+      },
+      'Order Items': {
+        'icon': Icons.shopping_bag_outlined,
+        'color': Colors.orange[600]!,
+        'fields': ['items', 'medicines', 'products', 'serviceName', 'services']
+      },
+      'Payment Information': {
+        'icon': Icons.payment,
+        'color': Colors.purple[600]!,
+        'fields': ['totalPrice', 'totalAmount', 'amount', 'servicePrice', 'price', 'paymentStatus', 'paymentMethod']
+      },
+      'Dates & Time': {
+        'icon': Icons.schedule,
+        'color': Colors.indigo[600]!,
+        'fields': ['createdAt', 'updatedAt', 'orderDate', 'selectedDate', 'selectedTimeSlot', 'deliveryDate']
+      },
+      'Location': {
+        'icon': Icons.location_on_outlined,
+        'color': Colors.red[600]!,
+        'fields': ['address', 'deliveryAddress', 'location', 'city', 'state', 'pincode']
+      },
+    };
+
+    for (String sectionTitle in sectionConfig.keys) {
+      var config = sectionConfig[sectionTitle]!;
+      List<String> fields = config['fields'];
+
+      // Find matching fields in the filtered order
+      Map<String, dynamic> sectionData = {};
+      for (String field in fields) {
+        if (filteredOrder.containsKey(field) && filteredOrder[field] != null) {
+          sectionData[field] = filteredOrder[field];
+        }
+      }
+
+      if (sectionData.isNotEmpty) {
+        sections.add(_buildSection(
+          title: sectionTitle,
+          icon: config['icon'],
+          color: config['color'],
+          data: sectionData,
+        ));
+        sections.add(SizedBox(height: 16));
+      }
+    }
+
+    // Add any remaining fields that don't fit in predefined sections
+    Map<String, dynamic> remainingFields = {};
+    for (var entry in filteredOrder.entries) {
+      bool found = false;
+      for (var config in sectionConfig.values) {
+        if ((config['fields'] as List<String>).contains(entry.key)) {
+          found = true;
+          break;
+        }
+      }
+      if (!found && entry.value != null) {
+        remainingFields[entry.key] = entry.value;
+      }
+    }
+
+    if (remainingFields.isNotEmpty) {
+      sections.add(_buildSection(
+        title: 'Additional Information',
+        icon: Icons.more_horiz,
+        color: Colors.grey[600]!,
+        data: remainingFields,
+      ));
+    }
+
+    return sections;
+  }
+
+// Filter out Firebase and technical fields
+  Map<String, dynamic> _filterOrder(Map<String, dynamic> order) {
+    // Define fields to exclude (Firebase and technical fields)
+    Set<String> excludedFields = {
+      // Firebase specific
+      'uid', 'docId', 'documentId', '_id', 'ref', 'reference',
+      // Firestore metadata
+      'exists', 'metadata', 'fromCache', 'hasPendingWrites',
+      // Technical fields
+      'createdBy', 'updatedBy', 'deleted', 'active', 'enabled',
+      'version', 'revision', 'hash', 'checksum',
+      // Internal tracking
+      'internalId', 'systemId', 'trackingId', 'sessionId',
+      // Debug fields
+      'debug', 'test', 'temp', 'temporary', 'source','proof_image_url','location','selectedDate','CreatedAt'
+    };
+
+    Map<String, dynamic> filtered = {};
+
+    for (var entry in order.entries) {
+      String key = entry.key.toLowerCase();
+
+      // Skip if key is in excluded list
+      if (excludedFields.any((excluded) => key.contains(excluded.toLowerCase()))) {
+        continue;
+      }
+
+      // Skip fields that look like Firebase paths or internal IDs
+      if (key.contains('firebase') ||
+          key.contains('firestore') ||
+          key.startsWith('_') ||
+          key.endsWith('_id') ||
+          key.endsWith('id') && key.length > 10) {
+        continue;
+      }
+
+      // Skip empty or null values
+      if (entry.value == null ||
+          entry.value.toString().trim().isEmpty ||
+          entry.value.toString() == 'null') {
+        continue;
+      }
+
+      filtered[entry.key] = entry.value;
+    }
+
+    return filtered;
+  }
+
+  Widget _buildSection({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Map<String, dynamic> data,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Section Content
+          Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              children: data.entries.map((entry) => _buildDetailRow(
+                key: entry.key,
+                value: entry.value,
+              )).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow({
+    required String key,
+    required dynamic value,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Key
+          SizedBox(
+            width: 120,
+            child: Text(
+              _formatKey(key),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+
+          // Separator
+          Text(
+            ': ',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+
+          // Value
+          Expanded(
+            child: _buildValueWidget(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValueWidget(dynamic value) {
+    if (value is List) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: value.asMap().entries.map((entry) {
+          return Container(
+            margin: EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Text(
+              '${entry.key + 1}. ${entry.value.toString()}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[800],
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    } else if (value is Map) {
+      return Container(
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue[200]!),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: value.entries.map((entry) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 4),
+              child: Text(
+                '${_formatKey(entry.key.toString())}: ${entry.value.toString()}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[800],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    } else {
+      // Check if it's a price/money field
+      bool isMoneyField = _isMoneyField(value.toString());
+
+      return Text(
+        value.toString(),
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: isMoneyField ? FontWeight.w600 : FontWeight.w500,
+          color: isMoneyField ? Colors.green[700] : Colors.grey[800],
+        ),
+      );
+    }
+  }
+
+  String _formatKey(String key) {
+    // Convert camelCase to Title Case
+    return key.replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(1)}')
+        .split(' ')
+        .map((word) => word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .join(' ')
+        .trim();
+  }
+
+  bool _isMoneyField(String value) {
+    // Check if the value contains currency symbols or looks like a price
+    return value.contains('₹') ||
+        value.contains('\$') ||
+        (RegExp(r'^\d+(\.\d{2})?$').hasMatch(value) && double.tryParse(value) != null);
+  }}

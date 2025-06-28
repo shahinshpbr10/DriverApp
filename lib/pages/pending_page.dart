@@ -31,7 +31,7 @@ class PendingOrdersTab extends StatelessWidget {
 
     FirebaseFirestore.instance
         .collection('smartclinic_booking')
-        .where('status', isEqualTo: 'pending')
+        .where('status', isEqualTo: 'approved')
         .snapshots()
         .listen((snapshot) {
           smartClinicOrders =
@@ -46,7 +46,7 @@ class PendingOrdersTab extends StatelessWidget {
 
     FirebaseFirestore.instance
         .collection('pharmacyorders')
-        .where('status', isEqualTo: 'pending')
+        .where('status', isEqualTo: 'approved')
         .snapshots()
         .listen((snapshot) {
           pharmacyOrders =
