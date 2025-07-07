@@ -321,7 +321,7 @@ class InProgressOrdersTab extends StatelessWidget {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                        isPharmacy ? PharmacyOrderDetailPage(order: order) : SmartClinicOrderDetailPage(order: order),
+                                        isPharmacy ? PharmacyOrderDetailPage(order: order) : SmartClinicOrderDetailPage(order: order, bookingId: order['documentId']),
                                       ),
                                     );
                                   },
