@@ -520,14 +520,14 @@ class CompletedOrdersTab extends StatelessWidget {
     // Define fields to exclude (Firebase and technical fields)
     Set<String> excludedFields = {
       // Firebase specific
-      'uid', 'docId', 'documentId', '_id', 'ref', 'reference',
+      'uid', 'docId', 'documentId', '_id', 'ref', 'reference','completedAt',
       // Firestore metadata
       'exists', 'metadata', 'fromCache', 'hasPendingWrites',
       // Technical fields
       'createdBy', 'updatedBy', 'deleted', 'active', 'enabled',
       'version', 'revision', 'hash', 'checksum',
       // Internal tracking
-      'internalId', 'systemId', 'trackingId', 'sessionId',
+      'internalId', 'systemId', 'trackingId', 'sessionId','Completed At'
       // Debug fields
       'debug', 'test', 'temp', 'temporary', 'source','proof_image_url','location','selectedDate','CreatedAt'
     };
