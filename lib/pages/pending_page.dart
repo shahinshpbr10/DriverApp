@@ -438,7 +438,7 @@ class PendingOrdersTab extends StatelessWidget {
                                                           order: order,
                                                         )
                                                         : SmartClinicOrderDetailPage(
-                                                          order: order,
+                                                          order: order, bookingId: order['documentId'],
                                                         ),
                                           ),
                                         );

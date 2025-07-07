@@ -14,8 +14,10 @@ import '../common/color.dart';
 
 class SmartClinicOrderDetailPage extends StatefulWidget {
   final Map<String, dynamic> order;
+  final String bookingId;
 
-  const SmartClinicOrderDetailPage({super.key, required this.order});
+
+  const SmartClinicOrderDetailPage({super.key, required this.order, required this.bookingId});
 
   @override
   State<SmartClinicOrderDetailPage> createState() =>
@@ -43,38 +45,102 @@ class _SmartClinicOrderDetailPageState
       return;
     }
 
-    final doc =
-        await FirebaseFirestore.instance
-            .collection('lab_tests')
-            .doc(selectedTestId)
-            .get();
-    if (doc.exists) {
-      final data = doc.data()!;
-      addonTests.add(data);
-      addonPrice += (data['PATIENT_RATE'] as num?)?.toInt() ?? 0;
-      setState(() => selectedTestId = null);
+    final doc = await FirebaseFirestore.instance
+        .collection('lab_tests')
+        .doc(selectedTestId)
+        .get();
 
+    if (!doc.exists) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Test added successfully!'),
-          backgroundColor: Colors.green,
+          content: Text('Selected test not found'),
+          backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    final testData = doc.data()!;
+    final alreadyExists = addonTests.any((t) => t['TEST_ID'] == selectedTestId);
+
+    if (alreadyExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Test already added'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      selectedTestId = null;
+      return;
+    }
+
+    final newTest = {
+      ...testData,
+      'TEST_ID': selectedTestId,
+    };
+
+    addonTests.add(newTest);
+    addonPrice += ((testData['PATIENT_RATE'] as num?) ?? 0).toInt();
+
+    // Update Firestore (including addon_price)
+    final docRef = FirebaseFirestore.instance
+        .collection('smartclinic_booking')
+        .doc(widget.bookingId);
+
+    await docRef.update({
+      'addon_tests': addonTests,
+      'addon_price': addonPrice,
+    });
+
+    setState(() {
+      selectedTestId = null;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Test added successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   Future<void> _removeTest(int index) async {
-    final test = addonTests[index];
-    addonPrice -= (test['PATIENT_RATE'] as num?)?.toInt() ?? 0;
+    if (index < 0 || index >= addonTests.length) return;
+
+    final docRef = FirebaseFirestore.instance
+        .collection('smartclinic_booking')
+        .doc(widget.bookingId);
+
+    final doc = await docRef.get();
+    final data = doc.data();
+
+    if (data == null || !data.containsKey('addon_tests')) return;
+
+    final tests = List<Map<String, dynamic>>.from(data['addon_tests']);
+
+    if (index >= tests.length) return;
+
+    final removedTest = tests.removeAt(index);
+    final removedPrice = (removedTest['PATIENT_RATE'] as num?)?.toInt() ?? 0;
+
+    // Update local state
+    addonPrice -= removedPrice;
     addonTests.removeAt(index);
+
+    // Update Firestore with both addon_tests and addon_price
+    await docRef.update({
+      'addon_tests': tests,
+      'addon_price': addonPrice,
+    });
+
     setState(() {});
   }
 
   Future<void> _saveAddonTests() async {
     setState(() => isUploading = true);
+
     try {
-      final docId =
-          widget.order['documentId']; // ✅ get docId from the order map
+      final docId = widget.bookingId ?? widget.order['documentId'];
 
       if (docId == null) {
         throw Exception("Booking document ID is missing");
@@ -83,7 +149,10 @@ class _SmartClinicOrderDetailPageState
       await FirebaseFirestore.instance
           .collection('smartclinic_booking')
           .doc(docId)
-          .update({'addon_tests': addonTests, 'addon_price': addonPrice});
+          .update({
+        'addon_tests': addonTests,
+        'addon_price': addonPrice,
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -103,12 +172,38 @@ class _SmartClinicOrderDetailPageState
     }
   }
 
+
+  Future<void> _loadSavedAddonTests() async {
+    final docId = widget.order['documentId'];
+    if (docId == null) return;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('smartclinic_booking')
+        .doc(docId)
+        .get();
+
+    if (doc.exists) {
+      final data = doc.data();
+      if (data != null) {
+        final savedTests = data['addon_tests'] as List<dynamic>? ?? [];
+        final savedPrice = data['addon_price'] as num? ?? 0;
+
+        setState(() {
+          addonTests = savedTests
+              .map((test) => Map<String, dynamic>.from(test))
+              .toList();
+          addonPrice = savedPrice.toInt();
+        });
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadSavedAddonTests();
     status =
-        widget.order['status'] ??
-        'pending'; // Fetch current status from Firestore document
+        widget.order['status'] ?? 'pending'; // Fetch current status from Firestore document
   }
 
   // This function updates the status and uploads the proof image if status is completed
@@ -190,7 +285,8 @@ class _SmartClinicOrderDetailPageState
                 children: [
                   _buildOrderSummaryCard(),
 
-                  const SizedBox(height: 16), // Enhanced Add-on Tests Section
+                  const SizedBox(height: 16),
+                  // Enhanced Add-on Tests Section
                   Card(
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -527,327 +623,308 @@ class _SmartClinicOrderDetailPageState
                           child: Column(
                             children: [
                               // Header with Total
-                              Container(
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xff84CB17),
-                                      Color(0xff6BA513),
-                                    ],
-                                  ),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(20),
-                                    topRight: Radius.circular(20),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.list_alt,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "Selected Tests",
-                                            style: AppTextStyles.bodyText
-                                                .copyWith(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                ),
-                                          ),
-                                          Text(
-                                            "${addonTests.length} test${addonTests.length > 1 ? 's' : ''} selected",
-                                            style: AppTextStyles.smallBodyText
-                                                .copyWith(
-                                                  fontSize: 14,
-                                                  color: Colors.white70,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(25),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              0.1,
-                                            ),
-                                            blurRadius: 0,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.currency_rupee,
-                                            color: Colors.green[600],
-                                            size: 18,
-                                          ),
-                                          Text(
-                                            "$addonPrice",
-                                            style: AppTextStyles.smallBodyText
-                                                .copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.green[700],
-                                                  fontSize: 16,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              StreamBuilder<DocumentSnapshot>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('smartclinic_booking')
+                                    .doc(widget.bookingId)
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return const Center(child: CircularProgressIndicator());
+                                  }
 
-                              // Tests List
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                child: ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: addonTests.length,
-                                  separatorBuilder:
-                                      (context, index) => Container(
-                                        margin: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        height: 1,
-                                        decoration: BoxDecoration(
+                                  if (snapshot.hasError) {
+                                    return const Center(child: Text('Error loading data'));
+                                  }
+
+                                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                                    return const Center(child: Text('No data found.'));
+                                  }
+
+                                  final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                                  final List<Map<String, dynamic>> addonTests =
+                                  List<Map<String, dynamic>>.from(data['addon_tests'] ?? []);
+                                  final int addonPrice = (data['addon_price'] as num?)?.toInt() ?? 0;
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Header Container
+                                      Container(
+                                        padding: const EdgeInsets.all(24),
+                                        decoration: const BoxDecoration(
                                           gradient: LinearGradient(
-                                            colors: [
-                                              Colors.transparent,
-                                              Colors.grey[300]!,
-                                              Colors.transparent,
-                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [Color(0xff84CB17), Color(0xff6BA513)],
+                                          ),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(20),
+                                            topRight: Radius.circular(20),
                                           ),
                                         ),
-                                      ),
-                                  itemBuilder: (context, index) {
-                                    final test = addonTests[index];
-                                    return Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Colors.grey[50]!,
-                                            Colors.white,
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: const Icon(
+                                                Icons.list_alt,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "Selected Tests",
+                                                    style: AppTextStyles.bodyText.copyWith(
+                                                      fontSize: 20,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "${addonTests.length} test${addonTests.length != 1 ? 's' : ''} selected",
+                                                    style: AppTextStyles.smallBodyText.copyWith(
+                                                      fontSize: 14,
+                                                      color: Colors.white70,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.circular(25),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(0.1),
+                                                    blurRadius: 0,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.currency_rupee,
+                                                    color: Colors.green[600],
+                                                    size: 18,
+                                                  ),
+                                                  Text(
+                                                    "$addonPrice",
+                                                    style: AppTextStyles.smallBodyText.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.green[700],
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ],
                                         ),
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: Colors.grey[200]!,
-                                          width: 1,
-                                        ),
                                       ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
+
+                                      // Tests List
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        child: ListView.separated(
+                                          shrinkWrap: true,
+                                          physics: const NeverScrollableScrollPhysics(),
+                                          itemCount: addonTests.length,
+                                          separatorBuilder: (context, index) => Container(
+                                            margin: const EdgeInsets.symmetric(vertical: 8),
+                                            height: 1,
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
                                                 colors: [
-                                                  Color(0xff84CB17),
-                                                  Color(0xff6BA513),
+                                                  Colors.transparent,
+                                                  Colors.grey[300]!,
+                                                  Colors.transparent,
                                                 ],
                                               ),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.blue
-                                                      .withOpacity(0.3),
-                                                  blurRadius: 6,
-                                                  offset: const Offset(0, 3),
-                                                ),
-                                              ],
-                                            ),
-                                            child: const Icon(
-                                              Icons.science,
-                                              color: Colors.white,
-                                              size: 20,
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  test['TEST_NAME'] ??
-                                                      'Unknown Test',
-                                                  style: AppTextStyles
-                                                      .smallBodyText
-                                                      .copyWith(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        fontSize: 15,
-                                                        color: Colors.black87,
-                                                      ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 2,
+                                          itemBuilder: (context, index) {
+                                            final test = addonTests[index];
+                                            return Container(
+                                              padding: const EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                  colors: [Colors.grey[50]!, Colors.white],
                                                 ),
-                                                const SizedBox(height: 4),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.green[100],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    "₹${test['PATIENT_RATE'] ?? 0}",
-                                                    style: AppTextStyles
-                                                        .smallBodyText
-                                                        .copyWith(
-                                                          color:
-                                                              Colors.green[700],
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 14,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: Colors.red[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(
-                                                Icons.delete_outline,
-                                                color: Colors.red[600],
-                                                size: 22,
+                                                borderRadius: BorderRadius.circular(16),
+                                                border: Border.all(color: Colors.grey[200]!, width: 1),
                                               ),
-                                              onPressed:
-                                                  () => _removeTest(index),
-                                              constraints: const BoxConstraints(
-                                                minWidth: 40,
-                                                minHeight: 40,
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(12),
+                                                    decoration: BoxDecoration(
+                                                      gradient: const LinearGradient(
+                                                        colors: [Color(0xff84CB17), Color(0xff6BA513)],
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.blue.withOpacity(0.3),
+                                                          blurRadius: 6,
+                                                          offset: const Offset(0, 3),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: const Icon(Icons.science, color: Colors.white, size: 20),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          test['TEST_NAME'] ?? 'Unknown Test',
+                                                          style: AppTextStyles.smallBodyText.copyWith(
+                                                            fontWeight: FontWeight.w700,
+                                                            fontSize: 15,
+                                                            color: Colors.black87,
+                                                          ),
+                                                          overflow: TextOverflow.ellipsis,
+                                                          maxLines: 2,
+                                                        ),
+                                                        const SizedBox(height: 4),
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.green[100],
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: Text(
+                                                            "₹${test['PATIENT_RATE'] ?? 0}",
+                                                            style: AppTextStyles.smallBodyText.copyWith(
+                                                              color: Colors.green[700],
+                                                              fontWeight: FontWeight.w600,
+                                                              fontSize: 14,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.red[50],
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: Icon(
+                                                        Icons.delete_outline,
+                                                        color: Colors.red[600],
+                                                        size: 22,
+                                                      ),
+                                                      onPressed: () => _removeTest(index),
+                                                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                                                      tooltip: "Remove test",
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              tooltip: "Remove test",
-                                            ),
-                                          ),
-                                        ],
+                                            );
+                                          },
+                                        ),
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ],
+                                  );
+                                },
                               ),
+
+
                             ],
                           ),
                         ),
                       ),
                     ),
 
-                    // Enhanced Save Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed: isUploading ? null : _saveAddonTests,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.lightpacha,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
-                          ),
-                          child:
-                              isUploading
-                                  ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      const Text(
-                                        "Saving Tests...",
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                  : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        "Save Add-On Tests",
-                                        style: AppTextStyles.smallBodyText
-                                            .copyWith(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                        ),
-                      ),
-                    ),
+                    /// Enhanced Save Button
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                    //   child: Container(
+                    //     width: double.infinity,
+                    //     decoration: BoxDecoration(
+                    //       borderRadius: BorderRadius.circular(16),
+                    //       boxShadow: [
+                    //         BoxShadow(
+                    //           color: Colors.green.withOpacity(0.3),
+                    //           blurRadius: 12,
+                    //           offset: const Offset(0, 6),
+                    //         ),
+                    //       ],
+                    //     ),
+                    //     child: ElevatedButton(
+                    //       onPressed: isUploading ? null : _saveAddonTests,
+                    //       style: ElevatedButton.styleFrom(
+                    //         backgroundColor: AppColors.lightpacha,
+                    //         foregroundColor: Colors.white,
+                    //         padding: const EdgeInsets.symmetric(vertical: 18),
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(16),
+                    //         ),
+                    //         elevation: 0,
+                    //       ),
+                    //       child:
+                    //           isUploading
+                    //               ? Row(
+                    //                 mainAxisAlignment: MainAxisAlignment.center,
+                    //                 children: [
+                    //                   SizedBox(
+                    //                     width: 22,
+                    //                     height: 22,
+                    //                     child: CircularProgressIndicator(
+                    //                       strokeWidth: 2.5,
+                    //                       valueColor:
+                    //                           AlwaysStoppedAnimation<Color>(
+                    //                             Colors.white,
+                    //                           ),
+                    //                     ),
+                    //                   ),
+                    //                   const SizedBox(width: 16),
+                    //                   const Text(
+                    //                     "Saving Tests...",
+                    //                     style: TextStyle(
+                    //                       fontSize: 16,
+                    //                       fontWeight: FontWeight.w600,
+                    //                     ),
+                    //                   ),
+                    //                 ],
+                    //               )
+                    //               : Row(
+                    //                 mainAxisAlignment: MainAxisAlignment.center,
+                    //                 children: [
+                    //                   Text(
+                    //                     "Save Add-On Tests",
+                    //                     style: AppTextStyles.smallBodyText
+                    //                         .copyWith(
+                    //                           fontSize: 16,
+                    //                           fontWeight: FontWeight.w600,
+                    //                         ),
+                    //                   ),
+                    //                 ],
+                    //               ),
+                    //     ),
+                    //   ),
+                    // ),
                     const SizedBox(height: 20),
                   ],
                   buildStatusDropdown(),
