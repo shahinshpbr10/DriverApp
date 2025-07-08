@@ -79,9 +79,11 @@ class _SmartClinicOrderDetailPageState
       'TEST_ID': selectedTestId,
     };
 
-    addonTests.add(newTest);
-    addonPrice += ((testData['PATIENT_RATE'] as num?) ?? 0).toInt();
+   setState(() {
+     addonTests.add(newTest);
+     addonPrice += ((testData['PATIENT_RATE'] as num?) ?? 0).toInt();
 
+   });
     // Update Firestore (including addon_price)
     final docRef = FirebaseFirestore.instance
         .collection('smartclinic_booking')
@@ -123,10 +125,12 @@ class _SmartClinicOrderDetailPageState
     final removedTest = tests.removeAt(index);
     final removedPrice = (removedTest['PATIENT_RATE'] as num?)?.toInt() ?? 0;
 
-    // Update local state
-    addonPrice -= removedPrice;
-    addonTests.removeAt(index);
+setState(() {
+  // Update local state
+  addonPrice -= removedPrice;
+  addonTests.removeAt(index);
 
+});
     // Update Firestore with both addon_tests and addon_price
     await docRef.update({
       'addon_tests': tests,
