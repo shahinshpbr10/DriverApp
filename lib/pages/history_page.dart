@@ -228,34 +228,34 @@ class _HistoryPageState extends State<HistoryPage>
               SizedBox(height: height * 0.02),
 
               // Search Bar with minimal rebuild approach
-              // Container(
-              //   margin: EdgeInsets.symmetric(horizontal: width * 0.05),
-              //   decoration: BoxDecoration(
-              //     color: Colors.grey[100],
-              //     borderRadius: BorderRadius.circular(12),
-              //     border: Border.all(color: Colors.grey[300]!),
-              //   ),
-              //   child: TextField(
-              //     style: AppTextStyles.smallBodyText,
-              //     controller: _searchController,
-              //     onChanged: _onSearchChanged,
-              //     decoration: InputDecoration(
-              //       hintText: 'Search by patient name, service, or medicine...',
-              //       prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-              //       suffixIcon: _searchController.text.isNotEmpty
-              //           ? IconButton(
-              //         icon: Icon(Icons.clear, color: Colors.grey[600]),
-              //         onPressed: () {
-              //
-              //           _onSearchChanged('');
-              //         },
-              //       )
-              //           : null,
-              //       border: InputBorder.none,
-              //       contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              //     ),
-              //   ),
-              // ),
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: width * 0.05),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: TextField(
+                  style: AppTextStyles.smallBodyText,
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Search by patient name, service, or medicine...',
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                      icon: Icon(Icons.clear, color: Colors.grey[600]),
+                      onPressed: () {
+
+                        _onSearchChanged('');
+                      },
+                    )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
 
               SizedBox(height: height * 0.02),
               Expanded(
