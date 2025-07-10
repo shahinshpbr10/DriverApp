@@ -227,7 +227,7 @@ class _HistoryPageState extends State<HistoryPage>
             children: [
               SizedBox(height: height * 0.02),
 
-              // Search Bar with minimal rebuild approach
+              /// Search Bar with minimal rebuild approach
               Container(
                 margin: EdgeInsets.symmetric(horizontal: width * 0.05),
                 decoration: BoxDecoration(
